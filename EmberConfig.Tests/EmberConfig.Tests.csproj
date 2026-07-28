@@ -6,8 +6,8 @@
     <IsTestProject>true</IsTestProject>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
-    <RootNamespace>SettingsLib.Tests</RootNamespace>
-    <AssemblyName>SettingsLib.Tests</AssemblyName>
+    <RootNamespace>EmberConfig.Tests</RootNamespace>
+    <AssemblyName>EmberConfig.Tests</AssemblyName>
     <RestoreAdditionalProjectSources>
       https://api.nuget.org/v3/index.json;
       https://nuget.bepinex.dev/v3/index.json;
@@ -22,7 +22,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SettingsLib.csproj" />
+    <ProjectReference Include="..\EmberConfig.csproj" />
   </ItemGroup>
 
   <ItemGroup>

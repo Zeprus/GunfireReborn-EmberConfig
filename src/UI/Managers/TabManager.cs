@@ -1,8 +1,8 @@
-namespace SettingsLib.UI;
+namespace EmberConfig.UI;
 
 using System;
 using System.Collections.Generic;
-using SettingsLib.Core;
+using EmberConfig.Core;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -79,7 +79,7 @@ public sealed class TabManager
 
         if (tabBar.Content is null || uiFinder.Viewport is null || uiFinder.Style is null)
         {
-            Plugin.Logger?.LogWarning($"SettingsLib: cannot create custom tab '{normalized}' because the settings UI is not ready.");
+            Plugin.Logger?.LogWarning($"EmberConfig: cannot create custom tab '{normalized}' because the settings UI is not ready.");
             return null;
         }
 

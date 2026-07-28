@@ -1,12 +1,12 @@
-namespace SettingsLib;
+namespace EmberConfig;
 
 using BepInEx;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
-using SettingsLib.Core;
+using EmberConfig.Core;
 
 /// <summary>
-/// BepInEx plugin entry point for SettingsLib.
+/// BepInEx plugin entry point for EmberConfig.
 /// </summary>
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 public class Plugin : BasePlugin

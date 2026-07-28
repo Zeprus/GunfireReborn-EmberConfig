@@ -1,4 +1,4 @@
-namespace SettingsLib.Public;
+namespace EmberConfig.Public;
 
 /// <summary>
 /// Native Gunfire Reborn settings tabs. These are the tabs that are guaranteed

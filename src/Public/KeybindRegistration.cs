@@ -1,4 +1,4 @@
-namespace SettingsLib.Public;
+namespace EmberConfig.Public;
 
 using BepInEx.Configuration;
 using UnityEngine;

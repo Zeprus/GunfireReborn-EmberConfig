@@ -1,7 +1,7 @@
-namespace SettingsLib.UI;
+namespace EmberConfig.UI;
 
 using System;
-using SettingsLib.Core;
+using EmberConfig.Core;
 
 internal static class OptionResolver
 {

@@ -1,10 +1,10 @@
-namespace SettingsLib;
+namespace EmberConfig;
 
 using System;
 using HarmonyLib;
 using Il2CppInterop.Runtime.Injection;
-using SettingsLib.Core;
-using SettingsLib.UI;
+using EmberConfig.Core;
+using EmberConfig.UI;
 using UnityEngine;
 
 /// <summary>

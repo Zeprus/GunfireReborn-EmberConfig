@@ -1,15 +1,15 @@
-namespace SettingsLib.Tests;
+namespace EmberConfig.Tests;
 
 using System;
 using System.IO;
 using BepInEx.Configuration;
-using SettingsLib.Core;
-using SettingsLib.UI;
+using EmberConfig.Core;
+using EmberConfig.UI;
 using Xunit;
 
 public class OptionResolverTests
 {
-    private static ConfigFile NewConfig() => new(Path.Combine(Path.GetTempPath(), $"SettingsLibTests-{Guid.NewGuid()}.cfg"), true);
+    private static ConfigFile NewConfig() => new(Path.Combine(Path.GetTempPath(), $"EmberConfigTests-{Guid.NewGuid()}.cfg"), true);
 
     [Fact]
     public void Resolve_AcceptableValueList_ReturnsListValues()

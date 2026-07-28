@@ -1,7 +1,7 @@
-namespace SettingsLib.UI;
+namespace EmberConfig.UI;
 
 using System;
-using SettingsLib.Core;
+using EmberConfig.Core;
 using TMPro;
 using UnityEngine;
 
@@ -64,7 +64,7 @@ internal class InputFieldRow : SettingRowBase
         }
         catch (Exception ex)
         {
-            Plugin.Logger?.LogWarning($"SettingsLib: failed to convert input '{text}' for '{Entry.Label}': {ex.Message}");
+            Plugin.Logger?.LogWarning($"EmberConfig: failed to convert input '{text}' for '{Entry.Label}': {ex.Message}");
             inputField.text = Entry.Config.BoxedValue?.ToString() ?? string.Empty;
         }
     }

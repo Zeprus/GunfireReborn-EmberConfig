@@ -1,8 +1,8 @@
-namespace SettingsLib.UI;
+namespace EmberConfig.UI;
 
 using System;
 using BepInEx.Configuration;
-using SettingsLib.Core;
+using EmberConfig.Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;

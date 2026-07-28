@@ -1,6 +1,6 @@
-namespace SettingsLib.Tests;
+namespace EmberConfig.Tests;
 
-using SettingsLib.Core;
+using EmberConfig.Core;
 using Xunit;
 
 public class SettingLocationTests

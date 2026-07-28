@@ -1,4 +1,4 @@
-namespace SettingsLib.UI;
+namespace EmberConfig.UI;
 
 using System;
 using UnityEngine;
@@ -20,7 +20,7 @@ internal sealed class CustomTabFactory
     {
         if (uiFinder.Viewport is null || uiFinder.Style is null || tabContent is null)
         {
-            Plugin.Logger?.LogWarning($"SettingsLib: cannot create custom tab '{tabName}' because the UI is not ready.");
+            Plugin.Logger?.LogWarning($"EmberConfig: cannot create custom tab '{tabName}' because the UI is not ready.");
             return null;
         }
 

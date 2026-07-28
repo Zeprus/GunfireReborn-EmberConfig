@@ -1,7 +1,7 @@
-namespace SettingsLib.UI;
+namespace EmberConfig.UI;
 
 using System;
-using SettingsLib.Core;
+using EmberConfig.Core;
 using UnityEngine;
 
 internal sealed class RowFactory
@@ -20,7 +20,7 @@ internal sealed class RowFactory
         var catalog = uiFinder.Style;
         if (catalog is null)
         {
-            Plugin.Logger?.LogWarning($"SettingsLib: UI style not captured; cannot render '{entry.Label}'.");
+            Plugin.Logger?.LogWarning($"EmberConfig: UI style not captured; cannot render '{entry.Label}'.");
             return null;
         }
 
@@ -98,7 +98,7 @@ internal sealed class RowFactory
 
     private static void LogMissingStyle(RowType rowType, string label, string styleName)
     {
-        Plugin.Logger?.LogWarning($"SettingsLib: cannot render '{label}' as {rowType}; {styleName} style not captured.");
+        Plugin.Logger?.LogWarning($"EmberConfig: cannot render '{label}' as {rowType}; {styleName} style not captured.");
     }
 
 }

@@ -1,4 +1,4 @@
-namespace SettingsLib.Core;
+namespace EmberConfig.Core;
 
 using System;
 using BepInEx.Configuration;

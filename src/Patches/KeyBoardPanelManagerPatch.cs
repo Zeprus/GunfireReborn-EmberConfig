@@ -1,7 +1,7 @@
-namespace SettingsLib.Patches;
+namespace EmberConfig.Patches;
 
 using HarmonyLib;
-using SettingsLib.Core;
+using EmberConfig.Core;
 using UIScript;
 
 [HarmonyPatch(typeof(KeyBoardPanelManager), "ShowShowItem", new[] { typeof(int) })]

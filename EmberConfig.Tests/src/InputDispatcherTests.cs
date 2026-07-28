@@ -1,8 +1,8 @@
-namespace SettingsLib.Tests;
+namespace EmberConfig.Tests;
 
 using System;
 using System.Collections.Generic;
-using SettingsLib.Core;
+using EmberConfig.Core;
 using Xunit;
 
 public class InputDispatcherTests

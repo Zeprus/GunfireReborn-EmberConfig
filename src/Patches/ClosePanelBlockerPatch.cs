@@ -1,9 +1,9 @@
-namespace SettingsLib.Patches;
+namespace EmberConfig.Patches;
 
 using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
-using SettingsLib.Core;
+using EmberConfig.Core;
 using UIScript;
 
 [HarmonyPatch]

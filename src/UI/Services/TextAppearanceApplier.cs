@@ -1,4 +1,4 @@
-namespace SettingsLib.UI;
+namespace EmberConfig.UI;
 
 using TMPro;
 

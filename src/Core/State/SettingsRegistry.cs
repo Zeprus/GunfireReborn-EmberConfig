@@ -1,4 +1,4 @@
-namespace SettingsLib.Core;
+namespace EmberConfig.Core;
 
 using System;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ public sealed class SettingsRegistry
 
     public static SettingsRegistry Current
     {
-        get => current ?? throw new InvalidOperationException("SettingsRegistry.Current has not been initialized. Ensure SettingsLib.Plugin.Load has run.");
+        get => current ?? throw new InvalidOperationException("SettingsRegistry.Current has not been initialized. Ensure EmberConfig.Plugin.Load has run.");
         set => current = value;
     }
 

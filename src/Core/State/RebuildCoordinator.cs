@@ -1,4 +1,4 @@
-namespace SettingsLib.Core;
+namespace EmberConfig.Core;
 
 /// <summary>
 /// Coordinates deferred rebuilds of the settings panel. Rebuilds are delayed

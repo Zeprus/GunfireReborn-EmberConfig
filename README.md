@@ -1,4 +1,4 @@
-# SettingsLib
+# EmberConfig
 
 A standalone BepInEx 6 plugin for Gunfire Reborn that exposes a generic `SettingsMenu` API. Mods can register settings and keybinds that appear inside the native in-game settings panel with vanilla visual and audio parity.
 
@@ -9,7 +9,7 @@ A standalone BepInEx 6 plugin for Gunfire Reborn that exposes a generic `Setting
 - **Custom tabs and groups** — organize settings by mod, with optional sub-groups.
 - **Hover descriptions** and vanilla-style row highlighting.
 - **Dual-key keybinds** rendered with vanilla TMP sprite icons.
-- **Soft-dependency friendly** — consumer mods can reference SettingsLib without hard coupling.
+- **Soft-dependency friendly** — consumer mods can reference EmberConfig without hard coupling.
 - **No vanilla savefile changes** — all values live in per-mod BepInEx `.cfg` files.
 
 ## Requirements
@@ -19,34 +19,34 @@ A standalone BepInEx 6 plugin for Gunfire Reborn that exposes a generic `Setting
 
 ## Installation
 
-Build with the project `dotnet publish` (or download the dll from the releases) and copy `SettingsLib.dll` to `BepInEx/plugins/`.
+Build with the project `dotnet publish` (or download the dll from the releases) and copy `EmberConfig.dll` to `BepInEx/plugins/`.
 To deploy automatically after building, set `GameDir` in the `.csproj` to your game installation.
 To build without deployment add `-p:DeployToPlugins=false`.
 
 ## Dependency (Soft Dependency)
 
-Reference SettingsLib with `BepInDependency.DependencyFlags.SoftDependency` and guard every call that touches SettingsLib behind a method marked with `[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]`.
+Reference EmberConfig with `BepInDependency.DependencyFlags.SoftDependency` and guard every call that touches EmberConfig behind a method marked with `[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]`.
 
 ```csharp
 using System;
 using System.Runtime.CompilerServices;
 using BepInEx;
 using BepInEx.IL2CPP;
-using SettingsLib.Public;
+using EmberConfig.Public;
 using UnityEngine;
 
 [BepInPlugin("your.mod.guid", "Your Mod", "1.0.0")]
-[BepInDependency("zeprus.gunfire.settingslib", BepInDependency.DependencyFlags.SoftDependency)]
+[BepInDependency("zeprus.gunfire.EmberConfig", BepInDependency.DependencyFlags.SoftDependency)]
 public class YourModPlugin : BasePlugin
 {
     public override void Load()
     {
-        if (SettingsLibCompatibility.IsLoaded)
-            SettingsLibCompatibility.RegisterSettings(Config);
+        if (EmberConfigCompatibility.IsLoaded)
+            EmberConfigCompatibility.RegisterSettings(Config);
     }
 }
 
-public static class SettingsLibCompatibility
+public static class EmberConfigCompatibility
 {
     private static bool? isLoaded;
 
@@ -54,7 +54,7 @@ public static class SettingsLibCompatibility
     {
         get
         {
-            isLoaded ??= IL2CPPChainloader.Instance?.Plugins.ContainsKey("zeprus.gunfire.settingslib") ?? false;
+            isLoaded ??= IL2CPPChainloader.Instance?.Plugins.ContainsKey("zeprus.gunfire.EmberConfig") ?? false;
             return isLoaded.Value;
         }
     }
@@ -78,7 +78,7 @@ public static class SettingsLibCompatibility
 
 ## Public API
 
-All public API lives in the `SettingsLib.Public` namespace.
+All public API lives in the `EmberConfig.Public` namespace.
 
 - `SettingsMenu.Register<T>(ConfigFile configFile, SettingOptions<T> options)`
 - `SettingsMenu.Register<T>(ConfigEntry<T> config, SettingOptions<T> options)`
@@ -89,13 +89,22 @@ All public API lives in the `SettingsLib.Public` namespace.
 
 Legacy string/`SettingsTab` overloads still exist but are marked `[Obsolete]`; prefer the options records.
 
+## Two ways to register
+
+Each registration method comes in two flavors:
+
+- **Pass `ConfigFile`** when you want EmberConfig to create and bind the BepInEx config entry for you.
+- **Pass `ConfigEntry`** when your mod already created the config entry itself (for example with `Config.Bind(...)`).
+
+In other words, the `ConfigFile` overloads do both the BepInEx binding and the settings-menu registration, while the `ConfigEntry` overloads only register an existing setting in the menu.
+
 ## Code Examples
 
 ### Scalar setting
 
 ```csharp
 using BepInEx.Configuration;
-using SettingsLib.Public;
+using EmberConfig.Public;
 using UnityEngine;
 
 var options = new SettingOptions<float>(

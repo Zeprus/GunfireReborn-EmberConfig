@@ -1,4 +1,4 @@
-namespace SettingsLib.Core;
+namespace EmberConfig.Core;
 
 /// <summary>
 /// Identifies where a setting row should appear in the settings panel.

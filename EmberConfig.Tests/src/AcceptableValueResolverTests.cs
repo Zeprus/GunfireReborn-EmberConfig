@@ -1,7 +1,7 @@
-namespace SettingsLib.Tests;
+namespace EmberConfig.Tests;
 
 using BepInEx.Configuration;
-using SettingsLib.UI;
+using EmberConfig.UI;
 using Xunit;
 
 public class AcceptableValueResolverTests

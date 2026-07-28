@@ -1,3 +1,3 @@
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("SettingsLib.Tests")]
+[assembly: InternalsVisibleTo("EmberConfig.Tests")]

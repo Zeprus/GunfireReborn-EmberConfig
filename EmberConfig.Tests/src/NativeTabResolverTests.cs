@@ -1,7 +1,7 @@
-namespace SettingsLib.Tests;
+namespace EmberConfig.Tests;
 
 using System.Linq;
-using SettingsLib.UI;
+using EmberConfig.UI;
 using Xunit;
 
 public class NativeTabResolverTests

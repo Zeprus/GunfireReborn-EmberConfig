@@ -1,6 +1,6 @@
-namespace SettingsLib.UI;
+namespace EmberConfig.UI;
 
-using SettingsLib.Core;
+using EmberConfig.Core;
 using UnityEngine;
 
 internal interface ISettingRow

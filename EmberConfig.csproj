@@ -2,12 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <AssemblyName>SettingsLib</AssemblyName>
-    <RootNamespace>SettingsLib</RootNamespace>
-    <Product>SettingsLib</Product>
+    <AssemblyName>EmberConfig</AssemblyName>
+    <RootNamespace>EmberConfig</RootNamespace>
+    <Product>EmberConfig</Product>
     <Version>1.0.0</Version>
-    <BepInExPluginGuid>zeprus.gunfire.settingslib</BepInExPluginGuid>
-    <BepInExPluginName>SettingsLib</BepInExPluginName>
+    <BepInExPluginGuid>zeprus.gunfire.EmberConfig</BepInExPluginGuid>
+    <BepInExPluginName>EmberConfig</BepInExPluginName>
     <BepInExPluginVersion>1.0.0</BepInExPluginVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
@@ -19,7 +19,7 @@
       https://nuget.bepinex.dev/v3/index.json;
       https://nuget.samboy.dev/v3/index.json
     </RestoreAdditionalProjectSources>
-    <DefaultItemExcludes>$(DefaultItemExcludes);SettingsLib.Tests\**</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);EmberConfig.Tests\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <PropertyGroup Label="GamePaths">

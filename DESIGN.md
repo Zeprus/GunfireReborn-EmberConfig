@@ -1,4 +1,4 @@
-# SettingsLib Design and Model
+# EmberConfig Design and Model
 
 A clean, standalone BepInEx 6 plugin that exposes a generic `SettingsMenu` API for every BepInEx config type, treats keybinds as a dual-key specialization, and injects per-mod grouped settings rows into the native Gunfire Reborn `PC_Panel_setting` UI using native templates, native tabs, and custom tabs created on demand.
 
@@ -10,7 +10,6 @@ A clean, standalone BepInEx 6 plugin that exposes a generic `SettingsMenu` API f
 
 ## Core Principles
 
-- **No copying of `SettingsLib_old`**: every line is written from scratch for clarity and maintainability.
 - **Composition over inheritance**: domain objects share behavior through interfaces and records; UI row controllers are thin and specialized.
 - **Nullable reference types enabled**; no underscore-prefixed identifiers.
 - **HarmonyX patches are triggers only**: real UI logic lives in injectors and controllers.
@@ -64,7 +63,7 @@ public sealed record KeybindRegistration(ConfigEntry<KeyCode> Primary, ConfigEnt
 
 ## Public API
 
-The public API is in the `SettingsLib.Public` namespace and is now expressed through `SettingOptions<T>` and `KeybindOptions` records. Legacy string/`SettingsTab` overloads still exist but are marked `[Obsolete]`.
+The public API is in the `EmberConfig.Public` namespace and is now expressed through `SettingOptions<T>` and `KeybindOptions` records. Legacy string/`SettingsTab` overloads still exist but are marked `[Obsolete]`.
 
 ```csharp
 public static class SettingsMenu
@@ -162,7 +161,7 @@ Because the `ConfigEntry` is the source of truth, the row also subscribes to `Co
 ```
 Plugin (BasePlugin)
   Load()
-    -> Harmony("zeprus.gunfire.settingslib").PatchAll()
+    -> Harmony("zeprus.gunfire.EmberConfig").PatchAll()
     -> AddComponent<SettingsMenuManager>()
 
 SettingsMenuManager (MonoBehaviour)
@@ -341,8 +340,8 @@ This is edge-triggered and single-frame, so keybinds do not fire while held and 
 ## Project Layout
 
 ```
-Mods/SettingsLib/
-├── SettingsLib.csproj
+Mods/EmberConfig/
+├── EmberConfig.csproj
 ├── README.md
 ├── DESIGN.md
 ├── ReviewPlan.md

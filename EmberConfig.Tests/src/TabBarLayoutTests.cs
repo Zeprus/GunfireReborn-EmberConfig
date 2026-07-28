@@ -1,6 +1,6 @@
-namespace SettingsLib.Tests;
+namespace EmberConfig.Tests;
 
-using SettingsLib.UI;
+using EmberConfig.UI;
 using Xunit;
 
 public class TabBarLayoutTests
