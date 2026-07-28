@@ -2,6 +2,7 @@ namespace SettingsLib.UI;
 
 using System;
 using System.Collections.Generic;
+using SettingsLib;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -19,6 +20,7 @@ internal sealed class TabActivationController
 
     public string? CurrentCustomTab { get; private set; }
 
+    private M1Toggle? lastActiveToggle;
     public TabActivationController(
         CustomTabRegistry customTabs,
         NativeTabResolver nativeResolver,
@@ -39,15 +41,23 @@ internal sealed class TabActivationController
 
     public void ActivateCustomTab(string tabName)
     {
+        Plugin.Logger?.LogInfo($"ActivateCustomTab: {tabName}, isActivating={isActivating}");
+
         if (isActivating)
             return;
 
         var normalized = Normalize(tabName);
         if (!customTabs.TryGet(normalized, out var tab))
+        {
+            Plugin.Logger?.LogWarning($"ActivateCustomTab: tab {tabName} not found");
             return;
+        }
 
         if (CurrentCustomTab == normalized && tab.Content.gameObject.activeSelf)
+        {
+            Plugin.Logger?.LogInfo($"ActivateCustomTab: {tabName} already active");
             return;
+        }
 
         isActivating = true;
         try
@@ -59,10 +69,16 @@ internal sealed class TabActivationController
             if (uiFinder.ScrollRect is not null)
                 uiFinder.ScrollRect.content = tab.Content.GetComponent<RectTransform>();
 
+            Plugin.Logger?.LogInfo($"ActivateCustomTab: setting toggle.isOn for {tabName}");
             if (!tab.Toggle.isOn)
                 tab.Toggle.isOn = true;
 
             tabBar.ScrollTo(tab.Toggle);
+            Plugin.Logger?.LogInfo($"ActivateCustomTab: completed {tabName}");
+        }
+        catch (Exception ex)
+        {
+            Plugin.Logger?.LogError($"ActivateCustomTab: exception: {ex}");
         }
         finally
         {
@@ -74,39 +90,52 @@ internal sealed class TabActivationController
     {
         CurrentCustomTab = null;
 
-        foreach (var tab in customTabs.All)
+        try
         {
-            tab.Content.gameObject.SetActive(false);
-            if (tab.Toggle.isOn)
-                tab.Toggle.SetIsOnWithoutNotify(false);
-        }
+            SetAllPanelsActive(false);
 
-        M1Toggle? active = activeNative;
-        foreach (var toggle in nativeResolver.NativeToggles)
-        {
-            if (!toggle.isOn)
-                continue;
-
-            if (nativeResolver.TryGetContentName(toggle, out var contentName))
+            foreach (var tab in customTabs.All)
             {
-                var content = uiFinder.GetContent(contentName);
-                if (content is not null)
-                {
-                    content.gameObject.SetActive(true);
-                    if (uiFinder.ScrollRect is not null)
-                        uiFinder.ScrollRect.content = content.GetComponent<RectTransform>();
-                }
+                if (tab.Toggle.isOn)
+                    tab.Toggle.SetIsOnWithoutNotify(false);
             }
 
-            active = toggle;
-        }
+            M1Toggle? active = activeNative;
+            foreach (var toggle in nativeResolver.NativeToggles)
+            {
+                if (!toggle.isOn)
+                    continue;
 
-        if (scrollToActive)
-            tabBar.ScrollTo(active);
+                if (nativeResolver.TryGetContentName(toggle, out var contentName))
+                {
+                    var content = uiFinder.GetContent(contentName);
+                    if (content is not null)
+                    {
+                        content.gameObject.SetActive(true);
+                        if (uiFinder.ScrollRect is not null)
+                            uiFinder.ScrollRect.content = content.GetComponent<RectTransform>();
+                    }
+                }
+
+                active = toggle;
+            }
+
+            if (scrollToActive)
+                tabBar.ScrollTo(active);
+        }
+        catch (Exception ex)
+        {
+            Plugin.Logger?.LogError($"DeactivateCustomTabs: exception: {ex}");
+        }
     }
 
     public void OnActiveToggleChanged(M1Toggle? activeToggle)
     {
+        if (activeToggle == lastActiveToggle)
+            return;
+
+        lastActiveToggle = activeToggle;
+
         if (activeToggle is null)
         {
             if (CurrentCustomTab is not null)
@@ -121,7 +150,7 @@ internal sealed class TabActivationController
             if (CurrentCustomTab != customName)
                 ActivateCustomTab(customName);
         }
-        else if (CurrentCustomTab is not null)
+        else
         {
             DeactivateCustomTabs(activeToggle, scrollToActive: false);
         }
@@ -172,7 +201,11 @@ internal sealed class TabActivationController
         }
     }
 
-    public void ClearCurrentCustomTab() => CurrentCustomTab = null;
+    public void ClearCurrentCustomTab()
+    {
+        CurrentCustomTab = null;
+        lastActiveToggle = null;
+    }
 
     private void SetAllPanelsActive(bool active)
     {

@@ -105,6 +105,7 @@ public class SettingsMenuManager : MonoBehaviour, UI.IKeybindRowServices
             injector.UpdateRows();
             SettingsPanelState.IsCapturing = injector.IsCapturing;
             tabManager.ValidateActiveTab();
+            tabManager.Update(Time.deltaTime);
             inputDispatcher.Poll(!panelTracker.IsOpen);
             toastManager.Update();
         }
