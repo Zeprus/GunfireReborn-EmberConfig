@@ -106,6 +106,7 @@ internal sealed class TabBarController
             return;
         }
 
+        EnsureViewportHitArea(viewportRect);
         content = CreateContent(viewportRect);
         if (content is null)
             return;
@@ -129,9 +130,13 @@ internal sealed class TabBarController
 
         HideSourceTabs();
 
+        var infos = nativeResolver.Scan(tabSwitchRect);
+        float uniformWidth = ComputeUniformTabWidth(infos.Count);
+        if (uniformWidth > 0f && style.HasValue)
+            style = style.Value with { Width = uniformWidth };
+
         if (!nativeTabsBuilt)
         {
-            var infos = nativeResolver.Scan(tabSwitchRect);
             for (int i = 0; i < infos.Count; i++)
             {
                 var info = infos[i];
@@ -147,6 +152,7 @@ internal sealed class TabBarController
         }
 
         RebuildTabList();
+        ApplyUniformTabWidth(uniformWidth);
 
         var active = GetActiveToggle();
         if (active is null && initialActiveIndex >= 0 && initialActiveIndex < tabs.Count)
@@ -182,7 +188,9 @@ internal sealed class TabBarController
         if (contentWidth <= 0f || viewportWidth <= 0f)
             return;
 
-        targetNormalized = TabBarLayout.ComputeHorizontalNormalizedPosition(viewportWidth, contentWidth, activeLeft);
+        float leftPadding = content.GetComponent<HorizontalLayoutGroup>()?.padding.left ?? 0f;
+        float targetLeftEdge = Mathf.Max(0f, activeLeft - leftPadding);
+        targetNormalized = TabBarLayout.ComputeHorizontalNormalizedPosition(viewportWidth, contentWidth, targetLeftEdge);
 
         // Snap on first show, wrap, or far jumps; tween for adjacent next/previous.
         if (lastActiveIndex < 0 || Math.Abs(index - lastActiveIndex) > 1)
@@ -199,16 +207,23 @@ internal sealed class TabBarController
         lastActiveIndex = index;
     }
 
+    public void ScrollToStart()
+    {
+        if (scrollRect is null)
+            return;
+
+        scrollRect.horizontalNormalizedPosition = 0f;
+        scrollRect.velocity = Vector2.zero;
+        isTransitioning = false;
+        lastActiveIndex = 0;
+    }
+
     public void SelectTab(int index)
     {
         if (tabs.Count == 0)
             return;
 
         index = TabBarLayout.Mod(index, tabs.Count);
-        var currentActiveIndex = GetActiveToggleIndex();
-        if (index == currentActiveIndex)
-            return;
-
         var active = tabs[index];
 
         isNotifying = true;
@@ -348,10 +363,14 @@ internal sealed class TabBarController
             capturedToggle.onValueChanged.RemoveAllListeners();
             Action<bool> onToggled = isOn =>
             {
-                if (!isOn || isNotifying)
+                if (isNotifying)
                     return;
 
-                WwiseAudio.PostIfValid(style?.ClickSoundEventId ?? 0u, capturedToggle.gameObject);
+                if (isOn)
+                    WwiseAudio.PostIfValid(style?.ClickSoundEventId ?? 0u, capturedToggle.gameObject);
+
+                // Without a toggle group, M1Toggle flips off on re-click. Re-select the tab
+                // to keep exactly one active and route to the TabManager.
                 SelectTab(capturedIndex);
             };
             capturedToggle.onValueChanged.AddListener(onToggled);
@@ -402,6 +421,17 @@ internal sealed class TabBarController
         return rect;
     }
 
+    private void EnsureViewportHitArea(RectTransform viewport)
+    {
+        if (viewport is null)
+            return;
+
+        var image = viewport.GetComponent<Image>() ?? viewport.gameObject.AddComponent<Image>();
+        image.sprite = null;
+        image.color = Color.clear;
+        image.raycastTarget = true;
+    }
+
     private void ConfigureScrollRect()
     {
         if (scrollRect is null || content is null || viewportRect is null)
@@ -411,11 +441,58 @@ internal sealed class TabBarController
         scrollRect.vertical = false;
         scrollRect.movementType = ScrollRect.MovementType.Clamped;
         scrollRect.inertia = false;
-        scrollRect.scrollSensitivity = 1f;
+        scrollRect.scrollSensitivity = 20f;
         scrollRect.content = content;
         scrollRect.viewport = viewportRect;
         scrollRect.horizontalNormalizedPosition = 0f;
         scrollRect.enabled = true;
+    }
+
+    private float ComputeUniformTabWidth(int tabCount)
+    {
+        if (tabCount <= 0 || viewportRect is null || tabSwitchRect is null || !style.HasValue)
+            return style?.Width ?? 220f;
+
+        var sourceLayout = tabSwitchRect.GetComponent<HorizontalLayoutGroup>();
+        if (sourceLayout is null)
+            return style.Value.Width;
+
+        float viewportWidth = viewportRect.sizeDelta.x;
+        float spacing = sourceLayout.spacing;
+        float totalHorizontalPadding = sourceLayout.padding.horizontal;
+
+        float width = (viewportWidth - totalHorizontalPadding - spacing * (tabCount - 1)) / tabCount;
+        return width > 0f ? width : style.Value.Width;
+    }
+
+    private void ApplyUniformTabWidth(float width)
+    {
+        if (content is null || !style.HasValue)
+            return;
+
+        float height = style.Value.Height;
+        for (int i = 0; i < content.childCount; i++)
+        {
+            var child = content.GetChild(i);
+            if (child is null)
+                continue;
+
+            if (child.GetComponent<M1Toggle>() is null)
+                continue;
+
+            var rect = child.GetComponent<RectTransform>();
+            if (rect is not null)
+                rect.sizeDelta = new Vector2(width, height);
+
+            var layout = child.GetComponent<LayoutElement>();
+            if (layout is not null)
+            {
+                layout.minWidth = width;
+                layout.preferredWidth = width;
+                layout.minHeight = height;
+                layout.preferredHeight = height;
+            }
+        }
     }
 
     private void RefreshSize()
@@ -433,11 +510,17 @@ internal sealed class TabBarController
         if (sourceLayout is not null)
         {
             targetLayout.spacing = sourceLayout.spacing;
+
+            // Keep the original total horizontal padding but split it evenly so the
+            // leftmost and rightmost tabs have equal clearance from the arrow buttons.
+            int totalHorizontalPadding = sourceLayout.padding.left + sourceLayout.padding.right;
+            int halfHorizontalPadding = totalHorizontalPadding / 2;
             targetLayout.padding = new RectOffset(
-                sourceLayout.padding.left,
-                sourceLayout.padding.right,
+                halfHorizontalPadding,
+                halfHorizontalPadding,
                 sourceLayout.padding.top,
                 sourceLayout.padding.bottom);
+
             targetLayout.childControlWidth = sourceLayout.childControlWidth;
             targetLayout.childControlHeight = sourceLayout.childControlHeight;
             targetLayout.childForceExpandWidth = sourceLayout.childForceExpandWidth;

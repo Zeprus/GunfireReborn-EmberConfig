@@ -50,9 +50,26 @@ internal readonly record struct TabStyle(
         var referenceTab = selectedTab ?? vanillaTabs[0].tab;
         var unselectedReferenceTab = unselectedTab ?? referenceTab;
 
-        var tabRect = referenceTab.GetComponent<RectTransform>();
-        var tabWidth = tabRect is not null ? tabRect.sizeDelta.x : 220f;
-        var tabHeight = tabRect is not null ? tabRect.sizeDelta.y : 60f;
+        // Use the average vanilla tab width so the scrollable bar can be made
+        // uniformly sized while still matching the original total width.
+        float totalWidth = 0f;
+        int validWidthCount = 0;
+        foreach (var (tab, _) in vanillaTabs)
+        {
+            var tRect = tab.GetComponent<RectTransform>();
+            if (tRect is null)
+                continue;
+
+            if (tRect.sizeDelta.x > 0f)
+            {
+                totalWidth += tRect.sizeDelta.x;
+                validWidthCount++;
+            }
+        }
+
+        var referenceTabRect = referenceTab.GetComponent<RectTransform>();
+        var tabWidth = validWidthCount > 0 ? totalWidth / validWidthCount : (referenceTabRect?.sizeDelta.x ?? 220f);
+        var tabHeight = referenceTabRect?.sizeDelta.y ?? 60f;
 
         var selectedText = referenceTab.Find("type_name")?.GetComponent<TextMeshProUGUI>();
         var unselectedText = unselectedReferenceTab.Find("type_name")?.GetComponent<TextMeshProUGUI>();

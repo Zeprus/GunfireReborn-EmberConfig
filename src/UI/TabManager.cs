@@ -101,7 +101,8 @@ public sealed class TabManager
 
         var activeToggle = FindActiveToggleInGroup();
         activeTabIndex = FindToggleIndex(activeToggle);
-        tabBar.ScrollTo(activeToggle);
+        activationController.OnActiveToggleChanged(activeToggle, scroll: false);
+        tabBar.ScrollToStart();
         AttachArrowListeners();
     }
 
@@ -161,7 +162,7 @@ public sealed class TabManager
 
             var activeToggle = FindActiveToggleInGroup();
             activeTabIndex = FindToggleIndex(activeToggle);
-            tabBar.ScrollTo(activeToggle);
+            activationController.OnActiveToggleChanged(activeToggle, scroll: false);
         }
         else
         {

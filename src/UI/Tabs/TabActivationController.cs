@@ -105,7 +105,7 @@ internal sealed class TabActivationController
         }
     }
 
-    public void OnActiveToggleChanged(M1Toggle? activeToggle)
+    public void OnActiveToggleChanged(M1Toggle? activeToggle, bool scroll = true)
     {
         if (activeToggle == lastActiveToggle)
             return;
@@ -117,7 +117,8 @@ internal sealed class TabActivationController
             if (CurrentCustomTab is not null)
                 DeactivateCustomTabs(null, scrollToActive: false);
 
-            tabBar.ScrollTo(null);
+            if (scroll)
+                tabBar.ScrollTo(null);
             return;
         }
 
@@ -131,7 +132,8 @@ internal sealed class TabActivationController
             DeactivateCustomTabs(activeToggle, scrollToActive: false);
         }
 
-        tabBar.ScrollTo(activeToggle);
+        if (scroll)
+            tabBar.ScrollTo(activeToggle);
     }
 
     public IEnumerable<Transform> GetAllContentPanels()
