@@ -2,7 +2,7 @@ namespace SettingsLib.UI;
 
 using System;
 using System.Collections.Generic;
-using SettingsLib;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -16,11 +16,10 @@ internal sealed class TabActivationController
     private readonly UIFinder uiFinder;
     private readonly TabBarController tabBar;
 
-    private bool isActivating;
-
     public string? CurrentCustomTab { get; private set; }
 
     private M1Toggle? lastActiveToggle;
+
     public TabActivationController(
         CustomTabRegistry customTabs,
         NativeTabResolver nativeResolver,
@@ -41,11 +40,6 @@ internal sealed class TabActivationController
 
     public void ActivateCustomTab(string tabName)
     {
-        Plugin.Logger?.LogInfo($"ActivateCustomTab: {tabName}, isActivating={isActivating}");
-
-        if (isActivating)
-            return;
-
         var normalized = Normalize(tabName);
         if (!customTabs.TryGet(normalized, out var tab))
         {
@@ -54,36 +48,18 @@ internal sealed class TabActivationController
         }
 
         if (CurrentCustomTab == normalized && tab.Content.gameObject.activeSelf)
-        {
-            Plugin.Logger?.LogInfo($"ActivateCustomTab: {tabName} already active");
             return;
-        }
 
-        isActivating = true;
-        try
-        {
-            CurrentCustomTab = normalized;
-            SetAllPanelsActive(false);
-            tab.Content.gameObject.SetActive(true);
+        CurrentCustomTab = normalized;
+        SetAllPanelsActive(false);
+        tab.Content.gameObject.SetActive(true);
 
-            if (uiFinder.ScrollRect is not null)
-                uiFinder.ScrollRect.content = tab.Content.GetComponent<RectTransform>();
+        if (uiFinder.ScrollRect is not null)
+            uiFinder.ScrollRect.content = tab.Content.GetComponent<RectTransform>();
 
-            Plugin.Logger?.LogInfo($"ActivateCustomTab: setting toggle.isOn for {tabName}");
-            if (!tab.Toggle.isOn)
-                tab.Toggle.isOn = true;
-
-            tabBar.ScrollTo(tab.Toggle);
-            Plugin.Logger?.LogInfo($"ActivateCustomTab: completed {tabName}");
-        }
-        catch (Exception ex)
-        {
-            Plugin.Logger?.LogError($"ActivateCustomTab: exception: {ex}");
-        }
-        finally
-        {
-            isActivating = false;
-        }
+        // TabBarController already owns isOn state; fix it up only if needed.
+        if (!tab.Toggle.isOn)
+            tab.Toggle.SetIsOnWithoutNotify(true);
     }
 
     public void DeactivateCustomTabs(M1Toggle? activeNative = null, bool scrollToActive = true)
@@ -156,33 +132,6 @@ internal sealed class TabActivationController
         }
 
         tabBar.ScrollTo(activeToggle);
-    }
-
-    public void ReRegisterCustomToggles(M1ToggleGroup? toggleGroup)
-    {
-        if (toggleGroup is null)
-            return;
-
-        var toggles = toggleGroup.m_Toggles;
-        foreach (var tab in customTabs.All)
-        {
-            bool alreadyRegistered = false;
-            var count = toggles.Count;
-            for (int i = 0; i < count; i++)
-            {
-                if (toggles[i] == tab.Toggle)
-                {
-                    alreadyRegistered = true;
-                    break;
-                }
-            }
-
-            if (!alreadyRegistered)
-            {
-                tab.Toggle.m_Group = toggleGroup;
-                toggleGroup.RegisterToggle(tab.Toggle);
-            }
-        }
     }
 
     public IEnumerable<Transform> GetAllContentPanels()

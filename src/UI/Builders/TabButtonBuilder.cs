@@ -1,22 +1,51 @@
 namespace SettingsLib.UI;
 
-using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 internal static class TabButtonBuilder
 {
-    internal static M1Toggle Build(string tabName, TabStyle tabStyle, M1ToggleGroup group, Action<string> onActivated)
+    /// <summary>
+    /// Builds a generic selectable tab button that is sized/positioned by a
+    /// parent <see cref="HorizontalLayoutGroup"/>.
+    /// </summary>
+    /// <param name="name">GameObject name for the new tab.</param>
+    /// <param name="label">Text shown on the tab.</param>
+    /// <param name="tabStyle">Captured tab style.</param>
+    /// <param name="parent">Transform to parent the new tab under.</param>
+    /// <returns>The created <see cref="M1Toggle"/>.</returns>
+    internal static M1Toggle Build(string name, string label, TabStyle tabStyle, Transform parent)
     {
-        Plugin.Logger?.LogInfo($"TabButtonBuilder.Build: tabName={tabName} style sprite={tabStyle.SelectedBackgroundSprite?.name ?? "null"} width={tabStyle.Width} height={tabStyle.Height}");
-        var go = new GameObject($"tab_custom_{tabName}");
+        var go = new GameObject(name);
         var rect = go.AddComponent<RectTransform>();
-        rect.SetParent(group.transform, false);
+        rect.SetParent(parent, false);
         RowElementBuilder.SetRect(rect, Vector2.zero, Vector2.zero, new Vector2(tabStyle.Width, tabStyle.Height), Vector2.zero);
 
+        _ = go.AddComponent<CanvasRenderer>();
+
+        // Invisible hit target for the whole tab. The M1Toggle will receive clicks here.
+        var hitImage = go.AddComponent<Image>();
+        hitImage.sprite = null;
+        hitImage.color = Color.clear;
+        hitImage.raycastTarget = true;
+
+        // LayoutElement gives the parent HorizontalLayoutGroup a fixed size to work with.
+        var layout = go.AddComponent<LayoutElement>();
+        layout.minWidth = tabStyle.Width;
+        layout.preferredWidth = tabStyle.Width;
+        layout.minHeight = tabStyle.Height;
+        layout.preferredHeight = tabStyle.Height;
+        layout.flexibleWidth = 0f;
+        layout.flexibleHeight = 0f;
+
         var toggle = go.AddComponent<M1Toggle>();
-        go.AddComponent<CanvasRenderer>();
+        toggle.targetGraphic = hitImage;
+        toggle.graphic = null;
+        toggle.ungraphic = null;
+        toggle.transition = Selectable.Transition.None;
+        toggle.interactable = true;
+        toggle.m_Group = null;
 
         // Selected state background: the dark chevron sprite vanilla tabs show when active.
         var backgroundObj = RowElementBuilder.CreateObject("Background", go.transform);
@@ -35,36 +64,14 @@ internal static class TabButtonBuilder
         // The tab label is always on top and changes color between unselected/selected states.
         var typeNameObj = RowElementBuilder.CreateObject("type_name", go.transform);
         RowElementBuilder.SetRect(typeNameObj, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-        var typeNameText = RowElementBuilder.AddText(typeNameObj, tabStyle.Unselected, tabName, TextAlignmentOptions.Center);
-        typeNameText.raycastTarget = true;
-
-        toggle.targetGraphic = null;
-        toggle.graphic = null;
-        toggle.ungraphic = null;
-        toggle.transition = Selectable.Transition.None;
-        toggle.interactable = true;
-
-        toggle.m_Group = group;
-        group.RegisterToggle(toggle);
+        var typeNameText = RowElementBuilder.AddText(typeNameObj, tabStyle.Unselected, label);
+        typeNameText.raycastTarget = false;
 
         backgroundObj.SetActive(false);
 
-        System.Action<bool> onToggled = isOn =>
-        {
-            backgroundObj.SetActive(isOn);
-            typeNameText.color = isOn ? tabStyle.Selected.Color : tabStyle.Unselected.Color;
-            if (!isOn)
-                return;
-
-            WwiseAudio.PostIfValid(tabStyle.ClickSoundEventId, go);
-
-            onActivated(tabName);
-        };
-        toggle.onValueChanged.AddListener(onToggled);
+        VanillaComponentApplier.ApplyToControl(go.transform, addDySelect: true, addAudio: true);
 
         toggle.SetIsOnWithoutNotify(false);
-
-        VanillaComponentApplier.AttachAudio(go.transform);
 
         go.SetActive(true);
         return toggle;

@@ -9,8 +9,9 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Maps native tab names to their vanilla content panels and scans the vanilla
-/// tab_switch bar for native <see cref="M1Toggle"/> instances.
+/// Maps native tab names to their vanilla content panels and provides
+/// enough data for <see cref="TabBarController"/> to rebuild fresh
+/// native <see cref="M1Toggle"/> buttons for a scrollable tab bar.
 /// </summary>
 internal sealed class NativeTabResolver
 {
@@ -40,13 +41,16 @@ internal sealed class NativeTabResolver
         return false;
     }
 
-    public void Scan(Transform tabSwitch)
+    /// <summary>
+    /// Scans the original vanilla tab_switch transform and returns the
+    /// data needed to recreate native tabs in a scrollable list.
+    /// </summary>
+    public IReadOnlyList<NativeTabInfo> Scan(Transform tabSwitch)
     {
-        nativeToggles.Clear();
-        toggleToContentName.Clear();
+        var infos = new List<NativeTabInfo>();
 
         if (tabSwitch is null)
-            return;
+            return infos;
 
         for (int i = 0; i < tabSwitch.childCount; i++)
         {
@@ -54,16 +58,33 @@ internal sealed class NativeTabResolver
             if (child is null)
                 continue;
 
+            if (child.name.StartsWith("tab_custom_", StringComparison.OrdinalIgnoreCase))
+                continue;
+
             var toggle = child.GetComponent<M1Toggle>();
             if (toggle is null)
                 continue;
 
-            if (child.name.StartsWith("tab_custom_", StringComparison.OrdinalIgnoreCase))
-                continue;
+            var label = child.Find("type_name")?.GetComponent<TextMeshProUGUI>()?.text ?? child.name;
+            var contentName = ResolveContentName(child);
 
-            nativeToggles.Add(toggle);
-            toggleToContentName[toggle] = ResolveContentName(child);
+            infos.Add(new NativeTabInfo(label, contentName, toggle.isOn));
         }
+
+        return infos;
+    }
+
+    public void Register(M1Toggle toggle, string contentName)
+    {
+        if (toggle is null)
+            throw new ArgumentNullException(nameof(toggle));
+        if (string.IsNullOrEmpty(contentName))
+            throw new ArgumentException("Content name cannot be null or empty.", nameof(contentName));
+
+        if (!toggleToContentName.ContainsKey(toggle))
+            nativeToggles.Add(toggle);
+
+        toggleToContentName[toggle] = contentName;
     }
 
     public void Clear()
@@ -106,4 +127,6 @@ internal sealed class NativeTabResolver
     }
 
     private static string Normalize(string name) => name?.Trim() ?? string.Empty;
+
+    internal readonly record struct NativeTabInfo(string Label, string ContentName, bool IsActive);
 }

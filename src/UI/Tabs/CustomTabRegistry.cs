@@ -47,13 +47,10 @@ internal sealed class CustomTabRegistry
         return true;
     }
 
-    public void DestroyAll(M1ToggleGroup? toggleGroup)
+    public void DestroyAll()
     {
         foreach (var tab in All.ToList())
         {
-            if (toggleGroup is not null)
-                toggleGroup.UnregisterToggle(tab.Toggle);
-
             UnityEngine.Object.Destroy(tab.Toggle.gameObject);
             UnityEngine.Object.Destroy(tab.Content.gameObject);
         }

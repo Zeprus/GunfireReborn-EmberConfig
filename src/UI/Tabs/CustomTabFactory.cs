@@ -10,17 +10,15 @@ using UnityEngine.UI;
 internal sealed class CustomTabFactory
 {
     private readonly UIFinder uiFinder;
-    private readonly Action<string> onActivated;
 
-    public CustomTabFactory(UIFinder uiFinder, Action<string> onActivated)
+    public CustomTabFactory(UIFinder uiFinder)
     {
         this.uiFinder = uiFinder ?? throw new ArgumentNullException(nameof(uiFinder));
-        this.onActivated = onActivated ?? throw new ArgumentNullException(nameof(onActivated));
     }
 
-    public CustomTab? Create(string tabName, M1ToggleGroup toggleGroup, TabStyle? tabStyle)
+    public CustomTab? Create(string tabName, RectTransform tabContent, TabStyle? tabStyle)
     {
-        if (uiFinder.Viewport is null || uiFinder.Style is null)
+        if (uiFinder.Viewport is null || uiFinder.Style is null || tabContent is null)
         {
             Plugin.Logger?.LogWarning($"SettingsLib: cannot create custom tab '{tabName}' because the UI is not ready.");
             return null;
@@ -28,7 +26,7 @@ internal sealed class CustomTabFactory
 
         var content = CreateContent(tabName);
         var style = tabStyle ?? TabStyle.Fallback(uiFinder.Style.Row.Title);
-        var toggle = TabButtonBuilder.Build(tabName, style, toggleGroup, onActivated);
+        var toggle = TabButtonBuilder.Build($"tab_custom_{tabName}", tabName, style, tabContent);
 
         return new CustomTab(toggle.transform, content, toggle);
     }

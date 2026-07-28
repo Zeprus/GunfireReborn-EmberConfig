@@ -2,32 +2,67 @@ namespace SettingsLib.UI;
 
 using System;
 using System.Collections.Generic;
-using SettingsLib;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// High-level controller for the custom tab bar carousel, indicator, and source tab hiding.
+/// High-level controller for the custom scrollable tab bar.
 /// </summary>
 internal sealed class TabBarController
 {
-    private const string CarouselName = "SL_TabCarousel";
-    private const string IndicatorName = "SL_TabIndicator";
+    private const float ScrollSpeed = 8f;
+    private const string ContentName = "SL_TabContent";
+    private const string ViewportName = "SL_TabViewport";
+
+    private readonly NativeTabResolver nativeResolver;
+    private readonly List<M1Toggle> tabs = new();
+    private readonly List<TabVisual> visuals = new();
 
     private RectTransform? tabSwitchRect;
     private RectTransform? viewportRect;
-    private RectTransform? carouselParent;
-    private RectTransform? indicatorParent;
+    private RectTransform? content;
     private Transform? container;
-    private TabCarouselController? carousel;
-    private TabIndicatorController? indicator;
-    private TabStyle style;
+    private ScrollRect? scrollRect;
+    private TabStyle? style;
+
+    private int lastActiveIndex = -1;
+    private int initialActiveIndex = -1;
+    private M1Toggle? lastVisualActive;
+    private bool isTransitioning;
+    private bool isNotifying;
+    private bool nativeTabsBuilt;
+    private float targetNormalized;
 
     public event Action<int>? OnTabSelected;
 
+    public TabBarController(NativeTabResolver nativeResolver)
+    {
+        this.nativeResolver = nativeResolver ?? throw new ArgumentNullException(nameof(nativeResolver));
+    }
+
+    public RectTransform? Content => content;
+
+    public int RingCount => tabs.Count;
+
+    public IReadOnlyList<M1Toggle> Ring => tabs;
+
+    public M1Toggle? GetToggle(int index) =>
+        index >= 0 && index < tabs.Count ? tabs[index] : null;
+
+    public M1Toggle? GetActiveToggle()
+    {
+        for (int i = 0; i < tabs.Count; i++)
+        {
+            if (tabs[i].isOn)
+                return tabs[i];
+        }
+
+        return null;
+    }
+
     public void Initialize(Transform tabSwitch, Transform tabContainer, TabStyle style)
     {
-        Plugin.Logger?.LogInfo($"TabBarController.Initialize: tabSwitch={tabSwitch?.name}, tabContainer={tabContainer?.name}");
         if (tabSwitch is null || tabContainer is null)
         {
             Plugin.Logger?.LogWarning("TabBarController.Initialize: tabSwitch or tabContainer is null");
@@ -42,14 +77,10 @@ internal sealed class TabBarController
         }
 
         this.style = style;
-        container = tabContainer;
 
         var parent = tabContainer;
-        const string ViewportName = "SL_TabViewport";
         while (parent is not null && parent.name == ViewportName)
-        {
             parent = parent.parent;
-        }
 
         if (parent is null)
         {
@@ -75,197 +106,368 @@ internal sealed class TabBarController
             return;
         }
 
-        Plugin.Logger?.LogInfo($"TabBarController.Initialize: viewportRect={viewportRect.name} size={viewportRect.sizeDelta}");
+        content = CreateContent(viewportRect);
+        if (content is null)
+            return;
 
-        try
-        {
-            CreateCarouselParent();
-        }
-        catch (Exception ex)
-        {
-            Plugin.Logger?.LogError($"CreateCarouselParent failed: {ex}");
-        }
+        scrollRect = viewportRect.GetComponent<ScrollRect>() ?? viewportRect.gameObject.AddComponent<ScrollRect>();
+        ConfigureScrollRect();
 
-        try
-        {
-            CreateIndicatorParent();
-        }
-        catch (Exception ex)
-        {
-            Plugin.Logger?.LogError($"CreateIndicatorParent failed: {ex}");
-        }
-
-        if (carouselParent is null)
-        {
-            Plugin.Logger?.LogWarning("TabBarController.Initialize: carouselParent is null after CreateCarouselParent");
-            carousel = null;
-        }
-        else
-        {
-            carousel = new TabCarouselController(carouselParent, style, index => OnTabSelected?.Invoke(index));
-        }
-
-        if (indicatorParent is null)
-        {
-            Plugin.Logger?.LogWarning("TabBarController.Initialize: indicatorParent is null after CreateIndicatorParent");
-            indicator = null;
-        }
-        else
-        {
-            indicator = new TabIndicatorController(indicatorParent, style);
-        }
-
-        Plugin.Logger?.LogInfo($"TabBarController.Initialize: carousel={(carousel != null)}, indicator={(indicator != null)}");
+        RefreshSize();
+        HideSourceTabs();
     }
 
     public void Rebuild(M1ToggleGroup? toggleGroup)
     {
-        Plugin.Logger?.LogInfo($"TabBarController.Rebuild: toggleGroup={(toggleGroup != null)}, carousel={(carousel != null)}, indicator={(indicator != null)}");
-        if (toggleGroup is null || carousel is null || indicator is null)
+        _ = toggleGroup; // Retained for call-site compatibility; no longer used.
+
+        if (tabSwitchRect is null || viewportRect is null || content is null || nativeResolver is null || !style.HasValue)
         {
-            Plugin.Logger?.LogWarning($"TabBarController.Rebuild skipped: toggleGroup={(toggleGroup != null)}, carousel={(carousel != null)}, indicator={(indicator != null)}");
+            Plugin.Logger?.LogWarning("TabBarController.Rebuild skipped: dependencies are not ready");
             return;
         }
 
         HideSourceTabs();
-        RefreshSize();
 
-        carousel.Rebuild(toggleGroup);
-        indicator.Rebuild(carousel.RingCount);
+        if (!nativeTabsBuilt)
+        {
+            var infos = nativeResolver.Scan(tabSwitchRect);
+            for (int i = 0; i < infos.Count; i++)
+            {
+                var info = infos[i];
+                var toggle = TabButtonBuilder.Build($"tab_native_{info.ContentName}", info.Label, style.Value, content);
+                toggle.transform.SetSiblingIndex(i);
+                nativeResolver.Register(toggle, info.ContentName);
+
+                if (info.IsActive)
+                    initialActiveIndex = i;
+            }
+
+            nativeTabsBuilt = true;
+        }
+
+        RebuildTabList();
+
+        var active = GetActiveToggle();
+        if (active is null && initialActiveIndex >= 0 && initialActiveIndex < tabs.Count)
+        {
+            active = tabs[initialActiveIndex];
+            active.SetIsOnWithoutNotify(true);
+            initialActiveIndex = -1;
+        }
+
+        UpdateVisuals(active);
+        lastVisualActive = active;
+
+        RefreshSize();
     }
 
     public void ScrollTo(M1Toggle? activeToggle)
     {
-        if (activeToggle is null || carousel is null)
+        if (activeToggle is null || scrollRect is null || content is null || viewportRect is null)
             return;
 
-        carousel.SetActive(activeToggle);
+        int index = tabs.IndexOf(activeToggle);
+        if (index < 0)
+            return;
+
+        var activeRect = activeToggle.GetComponent<RectTransform>();
+        if (activeRect is null)
+            return;
+
+        float activeLeft = activeRect.anchoredPosition.x - activeRect.rect.width * activeRect.pivot.x;
+        float contentWidth = content.rect.width;
+        float viewportWidth = viewportRect.rect.width;
+
+        if (contentWidth <= 0f || viewportWidth <= 0f)
+            return;
+
+        targetNormalized = TabBarLayout.ComputeHorizontalNormalizedPosition(viewportWidth, contentWidth, activeLeft);
+
+        // Snap on first show, wrap, or far jumps; tween for adjacent next/previous.
+        if (lastActiveIndex < 0 || Math.Abs(index - lastActiveIndex) > 1)
+        {
+            scrollRect.horizontalNormalizedPosition = targetNormalized;
+            scrollRect.velocity = Vector2.zero;
+            isTransitioning = false;
+        }
+        else
+        {
+            isTransitioning = true;
+        }
+
+        lastActiveIndex = index;
     }
 
-    public M1Toggle? GetToggle(int index) =>
-        carousel?.GetToggle(index);
+    public void SelectTab(int index)
+    {
+        if (tabs.Count == 0)
+            return;
 
-    public M1Toggle? GetActiveToggle() =>
-        carousel?.GetActiveToggle();
+        index = TabBarLayout.Mod(index, tabs.Count);
+        var currentActiveIndex = GetActiveToggleIndex();
+        if (index == currentActiveIndex)
+            return;
 
-    public int RingCount =>
-        carousel?.RingCount ?? 0;
+        var active = tabs[index];
 
-    public IReadOnlyList<M1Toggle> Ring =>
-        carousel?.Ring ?? new List<M1Toggle>();
+        isNotifying = true;
+        for (int i = 0; i < tabs.Count; i++)
+            tabs[i].SetIsOnWithoutNotify(i == index);
+        isNotifying = false;
+
+        UpdateVisuals(active);
+        lastVisualActive = active;
+
+        OnTabSelected?.Invoke(index);
+    }
+
+    public void NavigateNext()
+    {
+        if (tabs.Count == 0)
+            return;
+
+        var activeIndex = GetActiveToggleIndex();
+        if (activeIndex >= 0)
+            WwiseAudio.PostIfValid(style?.ClickSoundEventId ?? 0u, tabs[activeIndex].gameObject);
+
+        var start = activeIndex >= 0 ? activeIndex : -1;
+        SelectTab(TabBarLayout.Mod(start + 1, tabs.Count));
+    }
+
+    public void NavigatePrevious()
+    {
+        if (tabs.Count == 0)
+            return;
+
+        var activeIndex = GetActiveToggleIndex();
+        if (activeIndex >= 0)
+            WwiseAudio.PostIfValid(style?.ClickSoundEventId ?? 0u, tabs[activeIndex].gameObject);
+
+        var start = activeIndex >= 0 ? activeIndex : 0;
+        SelectTab(TabBarLayout.Mod(start - 1, tabs.Count));
+    }
 
     public void Update(float deltaTime)
     {
-        if (carousel is null || indicator is null)
+        if (content is null || scrollRect is null || viewportRect is null || !style.HasValue)
             return;
 
-        carousel.Update(deltaTime);
-        indicator.Update(carousel.CurrentActive, carousel.RingCount);
+        var active = GetActiveToggle();
+        if (active != lastVisualActive)
+        {
+            UpdateVisuals(active);
+            lastVisualActive = active;
+        }
+
+        if (!isTransitioning)
+            return;
+
+        float current = scrollRect.horizontalNormalizedPosition;
+        float newPos = Mathf.MoveTowards(current, targetNormalized, ScrollSpeed * deltaTime);
+        scrollRect.horizontalNormalizedPosition = newPos;
+        scrollRect.velocity = Vector2.zero;
+
+        if (Mathf.Approximately(newPos, targetNormalized))
+            isTransitioning = false;
     }
 
     public void Reset()
     {
-        if (carouselParent != null)
+        RestoreSourceTabs();
+
+        if (scrollRect is not null)
         {
-            UnityEngine.Object.Destroy(carouselParent.gameObject);
-            carouselParent = null;
+            scrollRect.content = null;
+            scrollRect.enabled = false;
         }
 
-        if (indicatorParent != null)
+        if (content is not null)
         {
-            UnityEngine.Object.Destroy(indicatorParent.gameObject);
-            indicatorParent = null;
+            UnityEngine.Object.Destroy(content.gameObject);
+            content = null;
         }
 
-        if (tabSwitchRect != null)
-            RestoreSourceTabs();
+        tabs.Clear();
+        visuals.Clear();
+        lastActiveIndex = -1;
+        initialActiveIndex = -1;
+        lastVisualActive = null;
+        isTransitioning = false;
+        targetNormalized = 0f;
+        nativeTabsBuilt = false;
 
-        carousel = null;
-        indicator = null;
+        tabSwitchRect = null;
+        viewportRect = null;
+        container = null;
+        scrollRect = null;
+        style = null;
     }
 
-    public void RefreshSize()
+    private int GetActiveToggleIndex()
     {
-        if (viewportRect is null || tabSwitchRect is null || carousel is null)
-            return;
-
-        LayoutRebuilder.ForceRebuildLayoutImmediate(viewportRect);
-
-        var layoutGroup = tabSwitchRect.GetComponent<HorizontalLayoutGroup>();
-        var spacing = layoutGroup?.spacing ?? 0f;
-        var viewportWidth = viewportRect.sizeDelta.x;
-        var viewportHeight = viewportRect.sizeDelta.y;
-
-        Plugin.Logger?.LogInfo($"TabBarController.RefreshSize: viewport={viewportRect.name} size=({viewportWidth}, {viewportHeight}) spacing={spacing}");
-
-        carousel.SetMetrics(viewportWidth, spacing);
-
-        if (carouselParent != null)
+        for (int i = 0; i < tabs.Count; i++)
         {
-            carouselParent.sizeDelta = new Vector2(viewportWidth, style.Height > 0 ? style.Height : viewportHeight);
-            carouselParent.anchoredPosition = Vector2.zero;
+            if (tabs[i].isOn)
+                return i;
         }
 
-        if (indicatorParent != null)
+        return -1;
+    }
+
+    private void RebuildTabList()
+    {
+        tabs.Clear();
+        visuals.Clear();
+
+        if (content is null)
+            return;
+
+        for (int i = 0; i < content.childCount; i++)
         {
-            indicatorParent.sizeDelta = new Vector2(viewportWidth, 12f);
-            indicatorParent.anchoredPosition = new Vector2(viewportRect.anchoredPosition.x, viewportRect.anchoredPosition.y - viewportHeight - 4f);
+            var child = content.GetChild(i);
+            if (child is null)
+                continue;
+
+            var toggle = child.GetComponent<M1Toggle>();
+            if (toggle is null)
+                continue;
+
+            tabs.Add(toggle);
+
+            var background = child.Find("Background")?.gameObject;
+            var label = child.Find("type_name")?.GetComponent<TextMeshProUGUI>();
+            visuals.Add(new TabVisual(toggle, background, label));
+        }
+
+        for (int i = 0; i < tabs.Count; i++)
+        {
+            var capturedToggle = tabs[i];
+            var capturedIndex = i;
+
+            capturedToggle.onValueChanged.RemoveAllListeners();
+            Action<bool> onToggled = isOn =>
+            {
+                if (!isOn || isNotifying)
+                    return;
+
+                WwiseAudio.PostIfValid(style?.ClickSoundEventId ?? 0u, capturedToggle.gameObject);
+                SelectTab(capturedIndex);
+            };
+            capturedToggle.onValueChanged.AddListener(onToggled);
         }
     }
 
-    private void CreateCarouselParent()
+    private void UpdateVisuals(M1Toggle? active)
     {
-        if (viewportRect is null)
-        {
-            Plugin.Logger?.LogWarning("CreateCarouselParent: viewportRect is null");
+        if (!style.HasValue)
             return;
+
+        var selected = style.Value.Selected;
+        var unselected = style.Value.Unselected;
+
+        foreach (var visual in visuals)
+        {
+            bool isOn = visual.Toggle == active;
+
+            if (visual.Background is not null && visual.Background.activeSelf != isOn)
+                visual.Background.SetActive(isOn);
+
+            if (visual.Label is not null)
+                visual.Label.color = isOn ? selected.Color : unselected.Color;
         }
+    }
 
-        var viewportWidth = viewportRect.sizeDelta.x;
-        var viewportHeight = viewportRect.sizeDelta.y;
-        Plugin.Logger?.LogInfo($"CreateCarouselParent: creating {CarouselName} under {viewportRect.name} size=({viewportWidth}, {viewportHeight})");
+    private RectTransform? CreateContent(RectTransform viewport)
+    {
+        if (viewport is null)
+            return null;
 
-        var go = new GameObject(CarouselName);
+        var go = new GameObject(ContentName);
         var rect = go.AddComponent<RectTransform>();
-        rect.SetParent(viewportRect, false);
-        rect.anchorMin = new Vector2(0.5f, 0.5f);
-        rect.anchorMax = new Vector2(0.5f, 0.5f);
-        rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.anchoredPosition = Vector2.zero;
-        rect.sizeDelta = new Vector2(viewportWidth, style.Height > 0 ? style.Height : viewportHeight);
-
-        carouselParent = rect;
-        Plugin.Logger?.LogInfo($"CreateCarouselParent: created {go.name} with parent={go.transform.parent?.name}");
-    }
-
-    private void CreateIndicatorParent()
-    {
-        if (viewportRect is null || container is null)
-        {
-            Plugin.Logger?.LogWarning($"CreateIndicatorParent: viewportRect={(viewportRect != null)}, container={(container != null)}");
-            return;
-        }
-
-        var viewportWidth = viewportRect.sizeDelta.x;
-        var viewportHeight = viewportRect.sizeDelta.y;
-        Plugin.Logger?.LogInfo($"CreateIndicatorParent: creating {IndicatorName} under {container.name} size=({viewportWidth}, {viewportHeight})");
-
-        var go = new GameObject(IndicatorName);
-        var rect = go.AddComponent<RectTransform>();
-        rect.SetParent(container, false);
+        rect.SetParent(viewport, false);
         rect.anchorMin = new Vector2(0f, 1f);
         rect.anchorMax = new Vector2(0f, 1f);
         rect.pivot = new Vector2(0f, 1f);
+        rect.anchoredPosition = Vector2.zero;
+        rect.sizeDelta = new Vector2(0f, viewport.sizeDelta.y);
 
-        rect.sizeDelta = new Vector2(viewportWidth, 12f);
-        rect.anchoredPosition = new Vector2(
-            viewportRect.anchoredPosition.x,
-            viewportRect.anchoredPosition.y - viewportHeight - 4f);
+        _ = go.AddComponent<HorizontalLayoutGroup>();
 
-        rect.SetSiblingIndex(viewportRect.GetSiblingIndex() + 1);
+        var fitter = go.AddComponent<ContentSizeFitter>();
+        fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+        fitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
 
-        indicatorParent = rect;
-        Plugin.Logger?.LogInfo($"CreateIndicatorParent: created {go.name} with parent={go.transform.parent?.name}");
+        go.SetActive(true);
+        return rect;
+    }
+
+    private void ConfigureScrollRect()
+    {
+        if (scrollRect is null || content is null || viewportRect is null)
+            return;
+
+        scrollRect.horizontal = true;
+        scrollRect.vertical = false;
+        scrollRect.movementType = ScrollRect.MovementType.Clamped;
+        scrollRect.inertia = false;
+        scrollRect.scrollSensitivity = 1f;
+        scrollRect.content = content;
+        scrollRect.viewport = viewportRect;
+        scrollRect.horizontalNormalizedPosition = 0f;
+        scrollRect.enabled = true;
+    }
+
+    private void RefreshSize()
+    {
+        if (content is null || viewportRect is null || tabSwitchRect is null || scrollRect is null)
+            return;
+
+        var sourceLayout = tabSwitchRect.GetComponent<HorizontalLayoutGroup>();
+        var targetLayout = content.GetComponent<HorizontalLayoutGroup>();
+        if (targetLayout is null)
+        {
+            targetLayout = content.gameObject.AddComponent<HorizontalLayoutGroup>();
+        }
+
+        if (sourceLayout is not null)
+        {
+            targetLayout.spacing = sourceLayout.spacing;
+            targetLayout.padding = new RectOffset(
+                sourceLayout.padding.left,
+                sourceLayout.padding.right,
+                sourceLayout.padding.top,
+                sourceLayout.padding.bottom);
+            targetLayout.childControlWidth = sourceLayout.childControlWidth;
+            targetLayout.childControlHeight = sourceLayout.childControlHeight;
+            targetLayout.childForceExpandWidth = sourceLayout.childForceExpandWidth;
+            targetLayout.childForceExpandHeight = sourceLayout.childForceExpandHeight;
+            targetLayout.childAlignment = sourceLayout.childAlignment;
+        }
+        else
+        {
+            targetLayout.spacing = 0f;
+            targetLayout.padding = new RectOffset(0, 0, 0, 0);
+            targetLayout.childControlWidth = true;
+            targetLayout.childControlHeight = true;
+            targetLayout.childForceExpandWidth = false;
+            targetLayout.childForceExpandHeight = false;
+            targetLayout.childAlignment = TextAnchor.UpperLeft;
+        }
+
+        var fitter = content.GetComponent<ContentSizeFitter>();
+        if (fitter is null)
+        {
+            fitter = content.gameObject.AddComponent<ContentSizeFitter>();
+            fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            fitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
+        }
+
+        scrollRect.content = content;
+        scrollRect.viewport = viewportRect;
+
+        LayoutRebuilder.ForceRebuildLayoutImmediate(content);
+        Canvas.ForceUpdateCanvases();
     }
 
     private void HideSourceTabs()
@@ -273,12 +475,7 @@ internal sealed class TabBarController
         if (tabSwitchRect is null)
             return;
 
-        for (int i = 0; i < tabSwitchRect.childCount; i++)
-        {
-            var child = tabSwitchRect.GetChild(i);
-            if (child != null)
-                child.gameObject.SetActive(false);
-        }
+        tabSwitchRect.gameObject.SetActive(false);
     }
 
     private void RestoreSourceTabs()
@@ -286,11 +483,8 @@ internal sealed class TabBarController
         if (tabSwitchRect is null)
             return;
 
-        for (int i = 0; i < tabSwitchRect.childCount; i++)
-        {
-            var child = tabSwitchRect.GetChild(i);
-            if (child != null)
-                child.gameObject.SetActive(true);
-        }
+        tabSwitchRect.gameObject.SetActive(true);
     }
+
+    private readonly record struct TabVisual(M1Toggle Toggle, GameObject? Background, TextMeshProUGUI? Label);
 }

@@ -2,7 +2,6 @@ namespace SettingsLib.UI;
 
 using System;
 using System.Collections.Generic;
-using SettingsLib;
 using SettingsLib.Core;
 using UnityEngine;
 using UnityEngine.UI;
@@ -19,7 +18,7 @@ public sealed class TabManager
     private readonly CustomTabFactory customTabFactory;
     private readonly NativeTabResolver nativeResolver = new();
     private readonly TabActivationController activationController;
-    private readonly TabBarController tabBar = new();
+    private readonly TabBarController tabBar;
 
     private M1ToggleGroup? m1ToggleGroup;
     private int activeTabIndex;
@@ -27,9 +26,10 @@ public sealed class TabManager
     public TabManager(UIFinder uiFinder)
     {
         this.uiFinder = uiFinder ?? throw new ArgumentNullException(nameof(uiFinder));
+        tabBar = new TabBarController(nativeResolver);
         activationController = new TabActivationController(customTabs, nativeResolver, uiFinder, tabBar);
-        customTabFactory = new CustomTabFactory(uiFinder, name => activationController.ActivateCustomTab(name));
-        tabBar.OnTabSelected += SetActiveTab;
+        customTabFactory = new CustomTabFactory(uiFinder);
+        tabBar.OnTabSelected += OnTabSelected;
     }
 
     public string? CurrentCustomTab => activationController.CurrentCustomTab;
@@ -56,13 +56,13 @@ public sealed class TabManager
         if (!createIfMissing)
             return null;
 
-        if (m1ToggleGroup is null || uiFinder.Viewport is null || uiFinder.Style is null)
+        if (tabBar.Content is null || uiFinder.Viewport is null || uiFinder.Style is null)
         {
             Plugin.Logger?.LogWarning($"SettingsLib: cannot create custom tab '{normalized}' because the settings UI is not ready.");
             return null;
         }
 
-        var newTab = customTabFactory.Create(normalized, m1ToggleGroup, uiFinder.Style.Tab);
+        var newTab = customTabFactory.Create(normalized, tabBar.Content, uiFinder.Style.Tab);
         if (newTab is null)
             return null;
 
@@ -79,7 +79,6 @@ public sealed class TabManager
 
     public void OnUIReady()
     {
-        Plugin.Logger?.LogInfo("TabManager.OnUIReady");
         if (uiFinder.TabSwitch is null || uiFinder.Style is null)
         {
             Plugin.Logger?.LogWarning($"TabManager.OnUIReady skipped: TabSwitch={(uiFinder.TabSwitch != null)}, Style={(uiFinder.Style != null)}");
@@ -89,10 +88,7 @@ public sealed class TabManager
         m1ToggleGroup = uiFinder.TabSwitch.GetComponent<M1ToggleGroup>();
 
         var tabStyle = uiFinder.Style.Tab ?? TabStyle.Fallback(uiFinder.Style.Row.Title);
-        Plugin.Logger?.LogInfo($"TabManager.OnUIReady: initializing tabBar with style.Height={tabStyle.Height} style.Width={tabStyle.Width}");
         tabBar.Initialize(uiFinder.TabSwitch, uiFinder.TabSwitch.parent, tabStyle);
-        nativeResolver.Scan(uiFinder.TabSwitch);
-        activationController.ReRegisterCustomToggles(m1ToggleGroup);
 
         var registry = SettingsRegistry.Current;
         if (registry is not null)
@@ -101,11 +97,7 @@ public sealed class TabManager
                 GetContentForTab(tab, true);
         }
 
-        if (m1ToggleGroup is not null)
-        {
-            Plugin.Logger?.LogInfo("TabManager.OnUIReady: rebuilding tabBar");
-            tabBar.Rebuild(m1ToggleGroup);
-        }
+        tabBar.Rebuild(m1ToggleGroup);
 
         var activeToggle = FindActiveToggleInGroup();
         activeTabIndex = FindToggleIndex(activeToggle);
@@ -116,7 +108,7 @@ public sealed class TabManager
     public void OnPanelClosed()
     {
         DetachArrowListeners();
-        customTabs.DestroyAll(m1ToggleGroup);
+        customTabs.DestroyAll();
         nativeResolver.Clear();
         tabBar.Reset();
         activationController.ClearCurrentCustomTab();
@@ -126,7 +118,7 @@ public sealed class TabManager
 
     public void ValidateActiveTab()
     {
-        if (m1ToggleGroup is null)
+        if (tabBar.RingCount == 0)
             return;
 
         var activeToggle = FindActiveToggleInGroup();
@@ -136,66 +128,26 @@ public sealed class TabManager
         activationController.OnActiveToggleChanged(activeToggle);
     }
 
-
     public void Update(float deltaTime)
     {
         tabBar.Update(deltaTime);
     }
 
-    private void SetActiveTab(int index)
+    private void OnTabSelected(int index)
     {
-        Plugin.Logger?.LogInfo($"TabManager.SetActiveTab: requested={index}, current={activeTabIndex}");
-
-        var count = tabBar.RingCount;
-        if (count == 0)
-        {
-            Plugin.Logger?.LogWarning("TabManager.SetActiveTab: ring count is 0");
-            return;
-        }
-
-        index = TabCarouselLayout.Mod(index, count);
         if (index == activeTabIndex)
-        {
-            Plugin.Logger?.LogInfo($"TabManager.SetActiveTab: index {index} already active");
             return;
-        }
 
         var toggle = tabBar.GetToggle(index);
         if (toggle is null)
-        {
-            Plugin.Logger?.LogWarning($"TabManager.SetActiveTab: toggle at index {index} is null");
             return;
-        }
 
         activeTabIndex = index;
-
-        try
-        {
-            for (int i = 0; i < count; i++)
-            {
-                var other = tabBar.GetToggle(i);
-                if (other is not null && other != toggle && other.isOn)
-                {
-                    Plugin.Logger?.LogInfo($"TabManager.SetActiveTab: turning off {other.name} (index {i})");
-                    other.m_IsOn = false;
-                }
-            }
-
-            Plugin.Logger?.LogInfo($"TabManager.SetActiveTab: turning on {toggle.name} (index {index})");
-            toggle.m_IsOn = true;
-
-            Plugin.Logger?.LogInfo($"TabManager.SetActiveTab: calling OnActiveToggleChanged for {toggle.name}");
-            activationController.OnActiveToggleChanged(toggle);
-        }
-        catch (Exception ex)
-        {
-            Plugin.Logger?.LogError($"TabManager.SetActiveTab: unexpected exception: {ex}");
-        }
+        activationController.OnActiveToggleChanged(toggle);
     }
 
     public void FinalizeLayout()
     {
-        Plugin.Logger?.LogInfo("TabManager.FinalizeLayout");
         foreach (var content in GetAllContentPanels())
         {
             var rect = content.GetComponent<RectTransform>();
@@ -203,13 +155,8 @@ public sealed class TabManager
                 LayoutRebuilder.ForceRebuildLayoutImmediate(rect);
         }
 
-        if (uiFinder.TabSwitch is not null && m1ToggleGroup is not null)
+        if (uiFinder.TabSwitch is not null && tabBar.Content is not null)
         {
-            var tabSwitchRect = uiFinder.TabSwitch.GetComponent<RectTransform>();
-            if (tabSwitchRect is not null)
-                LayoutRebuilder.ForceRebuildLayoutImmediate(tabSwitchRect);
-
-            tabBar.RefreshSize();
             tabBar.Rebuild(m1ToggleGroup);
 
             var activeToggle = FindActiveToggleInGroup();
@@ -218,7 +165,7 @@ public sealed class TabManager
         }
         else
         {
-            Plugin.Logger?.LogWarning($"TabManager.FinalizeLayout skipped: TabSwitch={(uiFinder.TabSwitch != null)}, m1ToggleGroup={(m1ToggleGroup != null)}");
+            Plugin.Logger?.LogWarning($"TabManager.FinalizeLayout skipped: TabSwitch={(uiFinder.TabSwitch != null)}, Content={(tabBar.Content != null)}");
         }
     }
 
@@ -251,22 +198,18 @@ public sealed class TabManager
         var left = m1ToggleGroup.m_Left;
         var right = m1ToggleGroup.m_Right;
 
-        Plugin.Logger?.LogInfo($"AttachArrowListeners: left={(left?.name ?? "null")}, right={(right?.name ?? "null")}");
-
         if (left is not null)
         {
             left.onClick.RemoveAllListeners();
-            Action leftClick = () => ShiftActiveTab(-1);
+            Action leftClick = () => tabBar.NavigatePrevious();
             left.onClick.AddListener(leftClick);
-            Plugin.Logger?.LogInfo($"AttachArrowListeners: attached left listener to {left.name}");
         }
 
         if (right is not null)
         {
             right.onClick.RemoveAllListeners();
-            Action rightClick = () => ShiftActiveTab(1);
+            Action rightClick = () => tabBar.NavigateNext();
             right.onClick.AddListener(rightClick);
-            Plugin.Logger?.LogInfo($"AttachArrowListeners: attached right listener to {right.name}");
         }
     }
 
@@ -277,20 +220,6 @@ public sealed class TabManager
 
         m1ToggleGroup.m_Left?.onClick.RemoveAllListeners();
         m1ToggleGroup.m_Right?.onClick.RemoveAllListeners();
-    }
-
-    private void ShiftActiveTab(int delta)
-    {
-        Plugin.Logger?.LogInfo($"ShiftActiveTab: delta={delta}, current={activeTabIndex}");
-
-        var count = tabBar.RingCount;
-        if (count == 0)
-        {
-            Plugin.Logger?.LogWarning("ShiftActiveTab: ring count is 0");
-            return;
-        }
-
-        SetActiveTab(activeTabIndex + delta);
     }
 
     private static string Normalize(string name) => name?.Trim() ?? string.Empty;
