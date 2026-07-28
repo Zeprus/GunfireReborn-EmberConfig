@@ -85,10 +85,6 @@ All public API lives in the `EmberConfig.Public` namespace.
 - `SettingsMenu.RegisterKeybind(ConfigFile configFile, KeybindOptions options)`
 - `SettingsMenu.RegisterKeybind(ConfigEntry<KeyCode> primary, ConfigEntry<KeyCode>? secondary, KeybindOptions options)`
 
-`SettingOptions<T>` and `KeybindOptions` are records. Use `WithTab(SettingsTab)` to convert the native tab enum to the vanilla name.
-
-Legacy string/`SettingsTab` overloads still exist but are marked `[Obsolete]`; prefer the options records.
-
 ## Two ways to register
 
 Each registration method comes in two flavors:

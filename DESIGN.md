@@ -63,7 +63,7 @@ public sealed record KeybindRegistration(ConfigEntry<KeyCode> Primary, ConfigEnt
 
 ## Public API
 
-The public API is in the `EmberConfig.Public` namespace and is now expressed through `SettingOptions<T>` and `KeybindOptions` records. Legacy string/`SettingsTab` overloads still exist but are marked `[Obsolete]`.
+The public API is in the `EmberConfig.Public` namespace and is expressed through `SettingOptions<T>` and `KeybindOptions` records.
 
 ```csharp
 public static class SettingsMenu
