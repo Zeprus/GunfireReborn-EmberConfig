@@ -10,7 +10,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class DropdownRow : SettingRowBase
+internal class DropdownRow : SettingRowBase
 {
     private readonly uint clickSoundEventId;
 
@@ -31,10 +31,10 @@ public class DropdownRow : SettingRowBase
 
         if (dropdown is not null)
         {
-            BuildOptions(entry);
+            options = OptionResolver.Resolve(entry);
             var il2cppOptions = new Il2CppSystem.Collections.Generic.List<TMP_Dropdown.OptionData>();
             foreach (var opt in options)
-                il2cppOptions.Add(new TMP_Dropdown.OptionData(GetDisplayName(opt)));
+                il2cppOptions.Add(new TMP_Dropdown.OptionData(OptionResolver.GetDisplayName(opt)));
             dropdown.options = il2cppOptions;
 
             onSelectionChanged = OnSelectionChanged;
@@ -73,7 +73,7 @@ public class DropdownRow : SettingRowBase
         var current = Entry?.Config.BoxedValue;
         int index = current is not null ? Array.IndexOf(options, current) : -1;
         if (index < 0 && current is not null)
-            index = FindIndexByDisplayName(current);
+            index = OptionResolver.FindIndexByDisplayName(options, current);
 
         if (index >= 0)
         {
@@ -92,44 +92,5 @@ public class DropdownRow : SettingRowBase
         Entry.Config.BoxedValue = options[index];
     }
 
-    private void BuildOptions(ISettingEntry entry)
-    {
-        var type = entry.Config.SettingType;
-        var acceptable = entry.Config.Description?.AcceptableValues;
 
-        if (acceptable is not null)
-        {
-            var values = AcceptableValueResolver.TryGetList(acceptable);
-            if (values is not null)
-            {
-                options = values;
-                return;
-            }
-        }
-
-        if (type.IsEnum)
-        {
-            var values = Enum.GetValues(type);
-            options = new object?[values.Length];
-            for (int i = 0; i < values.Length; i++) options[i] = values.GetValue(i);
-            return;
-        }
-
-        options = new[] { entry.Config.BoxedValue };
-    }
-
-
-
-    private int FindIndexByDisplayName(object current)
-    {
-        string name = GetDisplayName(current);
-        for (int i = 0; i < options.Length; i++)
-        {
-            if (GetDisplayName(options[i]) == name)
-                return i;
-        }
-        return -1;
-    }
-
-    private static string GetDisplayName(object? value) => value?.ToString() ?? string.Empty;
 }

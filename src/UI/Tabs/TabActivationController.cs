@@ -7,14 +7,14 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Handles switching between native and custom tab content and tab-bar scrolling.
+/// Handles switching between native and custom tab content.
+/// Scrolling decisions are left to the caller (<see cref="TabManager"/> / <see cref="TabBarController"/>).
 /// </summary>
 internal sealed class TabActivationController
 {
     private readonly CustomTabRegistry customTabs;
     private readonly NativeTabResolver nativeResolver;
     private readonly UIFinder uiFinder;
-    private readonly TabBarController tabBar;
 
     public string? CurrentCustomTab { get; private set; }
 
@@ -23,13 +23,11 @@ internal sealed class TabActivationController
     public TabActivationController(
         CustomTabRegistry customTabs,
         NativeTabResolver nativeResolver,
-        UIFinder uiFinder,
-        TabBarController tabBar)
+        UIFinder uiFinder)
     {
         this.customTabs = customTabs ?? throw new ArgumentNullException(nameof(customTabs));
         this.nativeResolver = nativeResolver ?? throw new ArgumentNullException(nameof(nativeResolver));
         this.uiFinder = uiFinder ?? throw new ArgumentNullException(nameof(uiFinder));
-        this.tabBar = tabBar ?? throw new ArgumentNullException(nameof(tabBar));
     }
 
     public bool IsCustomTab(string tabName)
@@ -57,12 +55,12 @@ internal sealed class TabActivationController
         if (uiFinder.ScrollRect is not null)
             uiFinder.ScrollRect.content = tab.Content.GetComponent<RectTransform>();
 
-        // TabBarController already owns isOn state; fix it up only if needed.
+        // TabBarController owns isOn state; fix it up only if needed.
         if (!tab.Toggle.isOn)
             tab.Toggle.SetIsOnWithoutNotify(true);
     }
 
-    public void DeactivateCustomTabs(M1Toggle? activeNative = null, bool scrollToActive = true)
+    public void DeactivateCustomTabs(M1Toggle? activeNative = null)
     {
         CurrentCustomTab = null;
 
@@ -95,9 +93,6 @@ internal sealed class TabActivationController
 
                 active = toggle;
             }
-
-            if (scrollToActive)
-                tabBar.ScrollTo(active);
         }
         catch (Exception ex)
         {
@@ -105,7 +100,7 @@ internal sealed class TabActivationController
         }
     }
 
-    public void OnActiveToggleChanged(M1Toggle? activeToggle, bool scroll = true)
+    public void OnActiveToggleChanged(M1Toggle? activeToggle)
     {
         if (activeToggle == lastActiveToggle)
             return;
@@ -115,10 +110,8 @@ internal sealed class TabActivationController
         if (activeToggle is null)
         {
             if (CurrentCustomTab is not null)
-                DeactivateCustomTabs(null, scrollToActive: false);
+                DeactivateCustomTabs(null);
 
-            if (scroll)
-                tabBar.ScrollTo(null);
             return;
         }
 
@@ -129,11 +122,8 @@ internal sealed class TabActivationController
         }
         else
         {
-            DeactivateCustomTabs(activeToggle, scrollToActive: false);
+            DeactivateCustomTabs(activeToggle);
         }
-
-        if (scroll)
-            tabBar.ScrollTo(activeToggle);
     }
 
     public IEnumerable<Transform> GetAllContentPanels()

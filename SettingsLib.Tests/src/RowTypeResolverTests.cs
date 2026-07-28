@@ -34,6 +34,20 @@ public class RowTypeResolverTests
     }
 
     [Fact]
+    public void FloatWithoutRange_ReturnsInputField()
+    {
+        var entry = CreateEntry("key", 0.5f);
+        Assert.Equal(RowType.InputField, RowTypeResolver.Resolve(entry));
+    }
+
+    [Fact]
+    public void FloatWithList_ReturnsDropdown()
+    {
+        var entry = CreateEntry("key", 0f, new AcceptableValueList<float>(0f, 0.5f, 1f));
+        Assert.Equal(RowType.Dropdown, RowTypeResolver.Resolve(entry));
+    }
+
+    [Fact]
     public void FloatWithRange_ReturnsSlider()
     {
         var entry = CreateEntry("key", 0.5f, new AcceptableValueRange<float>(0f, 1f));

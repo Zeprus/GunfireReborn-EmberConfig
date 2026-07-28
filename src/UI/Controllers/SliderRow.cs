@@ -7,7 +7,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class SliderRow : SettingRowBase
+internal class SliderRow : SettingRowBase
 {
     private readonly uint clickSoundEventId;
     private float lastAudioTime = -1f;

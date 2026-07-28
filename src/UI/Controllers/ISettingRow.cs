@@ -3,7 +3,7 @@ namespace SettingsLib.UI;
 using SettingsLib.Core;
 using UnityEngine;
 
-public interface ISettingRow
+internal interface ISettingRow
 {
     Transform Transform { get; }
     GameObject GameObject { get; }

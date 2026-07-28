@@ -16,41 +16,23 @@ public static class SettingsMenu
     /// </summary>
     /// <typeparam name="T">The setting value type.</typeparam>
     /// <param name="configFile">The config file to bind the entry to.</param>
-    /// <param name="section">The config section.</param>
-    /// <param name="key">The config key.</param>
-    /// <param name="defaultValue">The default value.</param>
-    /// <param name="description">The setting description shown on hover.</param>
-    /// <param name="label">The label shown in the settings row.</param>
-    /// <param name="tab">The tab to place the setting under. Can be a native tab string or a custom tab name.</param>
-    /// <param name="group">The group (usually the mod name) the setting belongs to.</param>
-    /// <param name="subGroup">Optional sub-group within <paramref name="group"/>.</param>
-    /// <param name="onValueChanged">Optional callback invoked when the value changes.</param>
-    /// <param name="acceptableValues">Optional acceptable values (ranges, lists, etc.).</param>
+    /// <param name="options">The options describing the setting.</param>
     /// <returns>The bound <see cref="ConfigEntry{T}"/>.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="configFile"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="configFile"/> or <paramref name="options"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown when <typeparamref name="T"/> is <see cref="KeyCode"/>.</exception>
-    public static ConfigEntry<T> Register<T>(
-        ConfigFile configFile,
-        string section,
-        string key,
-        T defaultValue,
-        string description,
-        string label,
-        string tab,
-        string group,
-        string? subGroup = null,
-        Action<T>? onValueChanged = null,
-        AcceptableValueBase? acceptableValues = null)
+    public static ConfigEntry<T> Register<T>(ConfigFile configFile, SettingOptions<T> options)
     {
         if (configFile is null)
             throw new ArgumentNullException(nameof(configFile));
+        if (options is null)
+            throw new ArgumentNullException(nameof(options));
         if (typeof(T) == typeof(KeyCode))
-            throw new ArgumentException("KeyCode settings must be registered with RegisterKeybind.", nameof(defaultValue));
+            throw new ArgumentException("KeyCode settings must be registered with RegisterKeybind.", nameof(options));
 
-        var configDescription = new ConfigDescription(description ?? string.Empty, acceptableValues);
-        var config = configFile.Bind(section, key, defaultValue, configDescription);
+        var configDescription = new ConfigDescription(options.Description, options.AcceptableValues);
+        var config = configFile.Bind(options.Section, options.Key, options.DefaultValue, configDescription);
 
-        return Register(config, label, tab, group, subGroup, onValueChanged);
+        return Register(config, options);
     }
 
     /// <summary>
@@ -58,32 +40,22 @@ public static class SettingsMenu
     /// </summary>
     /// <typeparam name="T">The setting value type.</typeparam>
     /// <param name="config">The existing config entry.</param>
-    /// <param name="label">The label shown in the settings row.</param>
-    /// <param name="tab">The tab to place the setting under. Can be a native tab string or a custom tab name.</param>
-    /// <param name="group">The group (usually the mod name) the setting belongs to.</param>
-    /// <param name="subGroup">Optional sub-group within <paramref name="group"/>.</param>
-    /// <param name="onValueChanged">Optional callback invoked when the value changes.</param>
+    /// <param name="options">The options describing the setting.</param>
     /// <returns>The <see cref="ConfigEntry{T}"/> that was passed in.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="config"/> is null.</exception>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="label"/> is empty or <typeparamref name="T"/> is <see cref="KeyCode"/>.</exception>
-    public static ConfigEntry<T> Register<T>(
-        ConfigEntry<T> config,
-        string label,
-        string tab,
-        string group,
-        string? subGroup = null,
-        Action<T>? onValueChanged = null)
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="config"/> or <paramref name="options"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="options.Label"/> is empty or <typeparamref name="T"/> is <see cref="KeyCode"/>.</exception>
+    public static ConfigEntry<T> Register<T>(ConfigEntry<T> config, SettingOptions<T> options)
     {
         if (config is null)
             throw new ArgumentNullException(nameof(config));
-        if (string.IsNullOrWhiteSpace(label))
-            throw new ArgumentException("Label cannot be empty.", nameof(label));
+        if (options is null)
+            throw new ArgumentNullException(nameof(options));
         if (typeof(T) == typeof(KeyCode))
             throw new ArgumentException("KeyCode settings must be registered with RegisterKeybind.", nameof(config));
 
-        var location = CreateLocation(tab, group, subGroup);
+        var location = CreateLocation(options.Tab, options.Group, options.SubGroup);
         var id = Guid.NewGuid().ToString("N");
-        var entry = new SettingEntry<T>(id, config, label, location, onValueChanged);
+        var entry = new SettingEntry<T>(id, config, options.Label, location, options.OnValueChanged);
 
         SettingsRegistry.Current.Register(entry);
         return config;
@@ -93,47 +65,27 @@ public static class SettingsMenu
     /// Registers a keybind and binds it to new <see cref="ConfigEntry{KeyCode}"/> entries.
     /// </summary>
     /// <param name="configFile">The config file to bind the entries to.</param>
-    /// <param name="section">The config section.</param>
-    /// <param name="key">The config key for the primary binding.</param>
-    /// <param name="defaultPrimary">The default primary key.</param>
-    /// <param name="description">The keybind description shown on hover.</param>
-    /// <param name="label">The label shown in the settings row.</param>
-    /// <param name="tab">The tab to place the keybind under. Can be a native tab string or a custom tab name.</param>
-    /// <param name="group">The group (usually the mod name) the keybind belongs to.</param>
-    /// <param name="subGroup">Optional sub-group within <paramref name="group"/>.</param>
-    /// <param name="defaultSecondary">Optional default secondary key.</param>
-    /// <param name="onPressed">Optional callback invoked when the keybind is pressed.</param>
-    /// <param name="onReleased">Optional callback invoked when the keybind is released.</param>
+    /// <param name="options">The options describing the keybind.</param>
     /// <returns>A <see cref="KeybindRegistration"/> containing the primary and optional secondary entries.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="configFile"/> is null.</exception>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="key"/> is empty.</exception>
-    public static KeybindRegistration RegisterKeybind(
-        ConfigFile configFile,
-        string section,
-        string key,
-        KeyCode defaultPrimary,
-        string description,
-        string label,
-        string tab,
-        string group,
-        string? subGroup = null,
-        KeyCode? defaultSecondary = null,
-        Action? onPressed = null,
-        Action? onReleased = null)
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="configFile"/> or <paramref name="options"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="options.Key"/> is empty.</exception>
+    public static KeybindRegistration RegisterKeybind(ConfigFile configFile, KeybindOptions options)
     {
         if (configFile is null)
             throw new ArgumentNullException(nameof(configFile));
-        if (string.IsNullOrWhiteSpace(key))
-            throw new ArgumentException("Key cannot be empty.", nameof(key));
+        if (options is null)
+            throw new ArgumentNullException(nameof(options));
+        if (string.IsNullOrWhiteSpace(options.Key))
+            throw new ArgumentException("Key cannot be empty.", nameof(options));
 
-        var configDescription = new ConfigDescription(description ?? string.Empty, null);
-        var primary = configFile.Bind(section, key, defaultPrimary, configDescription);
+        var configDescription = new ConfigDescription(options.Description ?? string.Empty, null);
+        var primary = configFile.Bind(options.Section, options.Key, options.DefaultPrimary, configDescription);
 
         ConfigEntry<KeyCode>? secondary = null;
-        if (defaultSecondary.HasValue)
-            secondary = configFile.Bind(section, $"{key}Secondary", defaultSecondary.Value, configDescription);
+        if (options.DefaultSecondary.HasValue)
+            secondary = configFile.Bind(options.Section, $"{options.Key}Secondary", options.DefaultSecondary.Value, configDescription);
 
-        return RegisterKeybind(primary, secondary, label, tab, group, subGroup, onPressed, onReleased);
+        return RegisterKeybind(primary, secondary, options);
     }
 
     /// <summary>
@@ -141,40 +93,87 @@ public static class SettingsMenu
     /// </summary>
     /// <param name="primary">The primary key binding.</param>
     /// <param name="secondary">Optional secondary key binding.</param>
-    /// <param name="label">The label shown in the settings row.</param>
-    /// <param name="tab">The tab to place the keybind under. Can be a native tab string or a custom tab name.</param>
-    /// <param name="group">The group (usually the mod name) the keybind belongs to.</param>
-    /// <param name="subGroup">Optional sub-group within <paramref name="group"/>.</param>
-    /// <param name="onPressed">Optional callback invoked when the keybind is pressed.</param>
-    /// <param name="onReleased">Optional callback invoked when the keybind is released.</param>
+    /// <param name="options">The options describing the keybind.</param>
     /// <returns>A <see cref="KeybindRegistration"/> containing the primary and optional secondary entries.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="primary"/> is null.</exception>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="label"/> is empty.</exception>
-    public static KeybindRegistration RegisterKeybind(
-        ConfigEntry<KeyCode> primary,
-        ConfigEntry<KeyCode>? secondary,
-        string label,
-        string tab,
-        string group,
-        string? subGroup = null,
-        Action? onPressed = null,
-        Action? onReleased = null)
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="primary"/> or <paramref name="options"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="options.Label"/> is empty.</exception>
+    public static KeybindRegistration RegisterKeybind(ConfigEntry<KeyCode> primary, ConfigEntry<KeyCode>? secondary, KeybindOptions options)
     {
         if (primary is null)
             throw new ArgumentNullException(nameof(primary));
-        if (string.IsNullOrWhiteSpace(label))
-            throw new ArgumentException("Label cannot be empty.", nameof(label));
+        if (options is null)
+            throw new ArgumentNullException(nameof(options));
+        if (string.IsNullOrWhiteSpace(options.Label))
+            throw new ArgumentException("Label cannot be empty.", nameof(options));
 
-        var location = CreateLocation(tab, group, subGroup);
+        var location = CreateLocation(options.Tab, options.Group, options.SubGroup);
         var id = Guid.NewGuid().ToString("N");
-        var entry = new KeybindEntry(id, primary, secondary, label, location, onPressed, onReleased);
+        var entry = new KeybindEntry(id, primary, secondary, options.Label, location, options.OnPressed, options.OnReleased);
 
         SettingsRegistry.Current.Register(entry);
         return new KeybindRegistration(primary, secondary);
     }
 
-    /// <inheritdoc cref="Register{T}(ConfigFile, string, string, T, string, string, string, string, string?, Action{T}?, AcceptableValueBase?)" />
+    #region Legacy Overloads
+
+    /// <inheritdoc cref="Register{T}(ConfigFile, SettingOptions{T})" />
+    [Obsolete("Use the Register(ConfigFile, SettingOptions<T>) overload instead.")]
+    public static ConfigEntry<T> Register<T>(
+        ConfigFile configFile,
+        string section,
+        string key,
+        T defaultValue,
+        string description,
+        string label,
+        string tab,
+        string group,
+        string? subGroup = null,
+        Action<T>? onValueChanged = null,
+        AcceptableValueBase? acceptableValues = null)
+    {
+        var options = new SettingOptions<T>(
+            section,
+            key,
+            defaultValue,
+            description,
+            label,
+            tab,
+            group,
+            subGroup,
+            onValueChanged,
+            acceptableValues);
+
+        return Register(configFile, options);
+    }
+
+    /// <inheritdoc cref="Register{T}(ConfigEntry{T}, SettingOptions{T})" />
+    [Obsolete("Use the Register(ConfigEntry<T>, SettingOptions<T>) overload instead.")]
+    public static ConfigEntry<T> Register<T>(
+        ConfigEntry<T> config,
+        string label,
+        string tab,
+        string group,
+        string? subGroup = null,
+        Action<T>? onValueChanged = null)
+    {
+        var options = new SettingOptions<T>(
+            config.Definition.Section,
+            config.Definition.Key,
+            config.Value,
+            config.Description?.Description ?? string.Empty,
+            label,
+            tab,
+            group,
+            subGroup,
+            onValueChanged,
+            config.Description?.AcceptableValues);
+
+        return Register(config, options);
+    }
+
+    /// <inheritdoc cref="Register{T}(ConfigFile, SettingOptions{T})" />
     /// <param name="tab">The native settings tab to place the setting under.</param>
+    [Obsolete("Use the Register(ConfigFile, SettingOptions<T>) overload with WithTab instead.")]
     public static ConfigEntry<T> Register<T>(
         ConfigFile configFile,
         string section,
@@ -188,11 +187,24 @@ public static class SettingsMenu
         Action<T>? onValueChanged = null,
         AcceptableValueBase? acceptableValues = null)
     {
-        return Register(configFile, section, key, defaultValue, description, label, tab.ToNativeName(), group, subGroup, onValueChanged, acceptableValues);
+        var options = new SettingOptions<T>(
+            section,
+            key,
+            defaultValue,
+            description,
+            label,
+            tab.ToNativeName(),
+            group,
+            subGroup,
+            onValueChanged,
+            acceptableValues);
+
+        return Register(configFile, options);
     }
 
-    /// <inheritdoc cref="Register{T}(ConfigEntry{T}, string, string, string, string?, Action{T}?)" />
+    /// <inheritdoc cref="Register{T}(ConfigEntry{T}, SettingOptions{T})" />
     /// <param name="tab">The native settings tab to place the setting under.</param>
+    [Obsolete("Use the Register(ConfigEntry<T>, SettingOptions<T>) overload with WithTab instead.")]
     public static ConfigEntry<T> Register<T>(
         ConfigEntry<T> config,
         string label,
@@ -201,11 +213,84 @@ public static class SettingsMenu
         string? subGroup = null,
         Action<T>? onValueChanged = null)
     {
-        return Register(config, label, tab.ToNativeName(), group, subGroup, onValueChanged);
+        var options = new SettingOptions<T>(
+            config.Definition.Section,
+            config.Definition.Key,
+            config.Value,
+            config.Description?.Description ?? string.Empty,
+            label,
+            tab.ToNativeName(),
+            group,
+            subGroup,
+            onValueChanged,
+            config.Description?.AcceptableValues);
+
+        return Register(config, options);
     }
 
-    /// <inheritdoc cref="RegisterKeybind(ConfigFile, string, string, KeyCode, string, string, string, string, string?, KeyCode?, Action?, Action?)" />
+    /// <inheritdoc cref="RegisterKeybind(ConfigFile, KeybindOptions)" />
+    [Obsolete("Use the RegisterKeybind(ConfigFile, KeybindOptions) overload instead.")]
+    public static KeybindRegistration RegisterKeybind(
+        ConfigFile configFile,
+        string section,
+        string key,
+        KeyCode defaultPrimary,
+        string description,
+        string label,
+        string tab,
+        string group,
+        string? subGroup = null,
+        KeyCode? defaultSecondary = null,
+        Action? onPressed = null,
+        Action? onReleased = null)
+    {
+        var options = new KeybindOptions(
+            section,
+            key,
+            defaultPrimary,
+            description,
+            label,
+            tab,
+            group,
+            subGroup,
+            defaultSecondary,
+            onPressed,
+            onReleased);
+
+        return RegisterKeybind(configFile, options);
+    }
+
+    /// <inheritdoc cref="RegisterKeybind(ConfigEntry{KeyCode}, ConfigEntry{KeyCode}?, KeybindOptions)" />
+    [Obsolete("Use the RegisterKeybind(ConfigEntry<KeyCode>, KeybindOptions) overload instead.")]
+    public static KeybindRegistration RegisterKeybind(
+        ConfigEntry<KeyCode> primary,
+        ConfigEntry<KeyCode>? secondary,
+        string label,
+        string tab,
+        string group,
+        string? subGroup = null,
+        Action? onPressed = null,
+        Action? onReleased = null)
+    {
+        var options = new KeybindOptions(
+            primary.Definition.Section,
+            primary.Definition.Key,
+            primary.Value,
+            primary.Description?.Description ?? string.Empty,
+            label,
+            tab,
+            group,
+            subGroup,
+            secondary?.Value,
+            onPressed,
+            onReleased);
+
+        return RegisterKeybind(primary, secondary, options);
+    }
+
+    /// <inheritdoc cref="RegisterKeybind(ConfigFile, KeybindOptions)" />
     /// <param name="tab">The native settings tab to place the keybind under.</param>
+    [Obsolete("Use the RegisterKeybind(ConfigFile, KeybindOptions) overload with WithTab instead.")]
     public static KeybindRegistration RegisterKeybind(
         ConfigFile configFile,
         string section,
@@ -220,11 +305,25 @@ public static class SettingsMenu
         Action? onPressed = null,
         Action? onReleased = null)
     {
-        return RegisterKeybind(configFile, section, key, defaultPrimary, description, label, tab.ToNativeName(), group, subGroup, defaultSecondary, onPressed, onReleased);
+        var options = new KeybindOptions(
+            section,
+            key,
+            defaultPrimary,
+            description,
+            label,
+            tab.ToNativeName(),
+            group,
+            subGroup,
+            defaultSecondary,
+            onPressed,
+            onReleased);
+
+        return RegisterKeybind(configFile, options);
     }
 
-    /// <inheritdoc cref="RegisterKeybind(ConfigEntry{KeyCode}, ConfigEntry{KeyCode}?, string, string, string, string?, Action?, Action?)" />
+    /// <inheritdoc cref="RegisterKeybind(ConfigEntry{KeyCode}, ConfigEntry{KeyCode}?, KeybindOptions)" />
     /// <param name="tab">The native settings tab to place the keybind under.</param>
+    [Obsolete("Use the RegisterKeybind(ConfigEntry<KeyCode>, KeybindOptions) overload with WithTab instead.")]
     public static KeybindRegistration RegisterKeybind(
         ConfigEntry<KeyCode> primary,
         ConfigEntry<KeyCode>? secondary,
@@ -235,8 +334,23 @@ public static class SettingsMenu
         Action? onPressed = null,
         Action? onReleased = null)
     {
-        return RegisterKeybind(primary, secondary, label, tab.ToNativeName(), group, subGroup, onPressed, onReleased);
+        var options = new KeybindOptions(
+            primary.Definition.Section,
+            primary.Definition.Key,
+            primary.Value,
+            primary.Description?.Description ?? string.Empty,
+            label,
+            tab.ToNativeName(),
+            group,
+            subGroup,
+            secondary?.Value,
+            onPressed,
+            onReleased);
+
+        return RegisterKeybind(primary, secondary, options);
     }
+
+    #endregion
 
     private static SettingLocation CreateLocation(string tab, string group, string? subGroup)
     {

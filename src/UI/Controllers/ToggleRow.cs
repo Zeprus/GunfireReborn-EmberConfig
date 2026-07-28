@@ -6,7 +6,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ToggleRow : SettingRowBase
+internal class ToggleRow : SettingRowBase
 {
     private readonly uint clickSoundEventId;
 

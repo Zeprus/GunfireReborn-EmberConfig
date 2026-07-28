@@ -67,7 +67,7 @@ internal sealed class SettingsInjector
 
         foreach (var tab in registry.GetTabs())
         {
-            var content = tabManager.GetContentForTab(tab, true);
+            var content = tabManager.GetOrCreateContentForTab(tab);
             if (content is null)
                 continue;
 

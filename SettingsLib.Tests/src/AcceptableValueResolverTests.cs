@@ -35,6 +35,20 @@ public class AcceptableValueResolverTests
     }
 
     [Fact]
+    public void TryGetList_FloatList_ReturnsValues()
+    {
+        var acceptable = new AcceptableValueList<float>(0f, 0.5f, 1f);
+
+        var result = AcceptableValueResolver.TryGetList(acceptable);
+
+        Assert.NotNull(result);
+        Assert.Equal(3, result!.Length);
+        Assert.Equal(0f, result[0]);
+        Assert.Equal(0.5f, result[1]);
+        Assert.Equal(1f, result[2]);
+    }
+
+    [Fact]
     public void TryGetList_NullAcceptable_ReturnsNull()
     {
         var result = AcceptableValueResolver.TryGetList(null);
@@ -86,6 +100,18 @@ public class AcceptableValueResolverTests
         Assert.False(success);
         Assert.Equal(0f, min);
         Assert.Equal(0f, max);
+    }
+
+    [Fact]
+    public void TryGetRange_DoubleRange_ReturnsMinMax()
+    {
+        var acceptable = new AcceptableValueRange<double>(0.0, 100.0);
+
+        var success = AcceptableValueResolver.TryGetRange(acceptable, out var min, out var max);
+
+        Assert.True(success);
+        Assert.Equal(0f, min);
+        Assert.Equal(100f, max);
     }
 
     [Fact]

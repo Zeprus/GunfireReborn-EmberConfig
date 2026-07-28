@@ -31,10 +31,6 @@ public class SettingsMenuManager : MonoBehaviour, UI.IKeybindRowServices
     private SettingsInjector? injector;
     private InputDispatcher? inputDispatcher;
 
-    private DateTime lastErrorLog = DateTime.MinValue;
-    private string? lastErrorMessage;
-    private int errorRepeatCount;
-
     private void Awake()
     {
         try
@@ -64,6 +60,7 @@ public class SettingsMenuManager : MonoBehaviour, UI.IKeybindRowServices
         catch (Exception ex)
         {
             Plugin.Logger?.LogError($"SettingsMenuManager.Awake failed: {ex}");
+            enabled = false;
         }
     }
 
@@ -86,46 +83,94 @@ public class SettingsMenuManager : MonoBehaviour, UI.IKeybindRowServices
 
     private void Update()
     {
+        if (panelTracker is null || uiFinder is null || injector is null || inputDispatcher is null || tabManager is null)
+            return;
+
+        TrackPanel();
+        InitializeUIIfNeeded();
+        RebuildIfRequested();
+        UpdateRowsAndState();
+        ValidateTabState();
+        PollInputAndToast();
+    }
+
+    private void TrackPanel()
+    {
         try
         {
-            if (panelTracker is null || uiFinder is null || injector is null || inputDispatcher is null || tabManager is null)
-                return;
+            panelTracker!.Tick();
+        }
+        catch (Exception ex)
+        {
+            Plugin.Logger?.LogError($"SettingsMenuManager.TrackPanel failed: {ex}");
+        }
+    }
 
-            panelTracker.Tick();
+    private void InitializeUIIfNeeded()
+    {
+        if (uiFinder!.IsReady || panelTracker!.PanelRoot is null)
+            return;
 
-            if (!uiFinder.IsReady && panelTracker.PanelRoot is not null)
-            {
-                uiFinder.Initialize(panelTracker.PanelRoot);
-                tabManager.OnUIReady();
-            }
+        try
+        {
+            uiFinder.Initialize(panelTracker.PanelRoot);
+            tabManager!.OnUIReady();
+        }
+        catch (Exception ex)
+        {
+            Plugin.Logger?.LogError($"SettingsMenuManager.InitializeUIIfNeeded failed: {ex}");
+        }
+    }
 
-            if (rebuildCoordinator.TryRebuild(panelTracker.IsOpen, uiFinder.IsReady))
-                injector.Rebuild();
+    private void RebuildIfRequested()
+    {
+        try
+        {
+            if (rebuildCoordinator.TryRebuild(panelTracker!.IsOpen, uiFinder!.IsReady))
+                injector!.Rebuild();
+        }
+        catch (Exception ex)
+        {
+            Plugin.Logger?.LogError($"SettingsMenuManager.RebuildIfRequested failed: {ex}");
+        }
+    }
 
-            injector.UpdateRows();
+    private void UpdateRowsAndState()
+    {
+        try
+        {
+            injector!.UpdateRows();
             SettingsPanelState.IsCapturing = injector.IsCapturing;
-            tabManager.ValidateActiveTab();
-            tabManager.Update(Time.deltaTime);
-            inputDispatcher.Poll(!panelTracker.IsOpen);
+            tabManager!.Update(Time.deltaTime);
+        }
+        catch (Exception ex)
+        {
+            Plugin.Logger?.LogError($"SettingsMenuManager.UpdateRowsAndState failed: {ex}");
+        }
+    }
+
+    private void ValidateTabState()
+    {
+        try
+        {
+            tabManager!.ValidateActiveTab();
+        }
+        catch (Exception ex)
+        {
+            Plugin.Logger?.LogError($"SettingsMenuManager.ValidateTabState failed: {ex}");
+        }
+    }
+
+    private void PollInputAndToast()
+    {
+        try
+        {
+            inputDispatcher!.Poll(!panelTracker!.IsOpen);
             toastManager.Update();
         }
         catch (Exception ex)
         {
-            var elapsed = DateTime.Now - lastErrorLog;
-            var message = ex.ToString();
-            if (message != lastErrorMessage || elapsed.TotalSeconds >= 2)
-            {
-                lastErrorLog = DateTime.Now;
-                lastErrorMessage = message;
-                errorRepeatCount = 0;
-                Plugin.Logger?.LogError($"SettingsMenuManager.Update error: {ex}");
-            }
-            else
-            {
-                errorRepeatCount++;
-                if (errorRepeatCount <= 3 || errorRepeatCount % 60 == 0)
-                    Plugin.Logger?.LogError($"SettingsMenuManager.Update error repeated {errorRepeatCount} times: {ex.Message}");
-            }
+            Plugin.Logger?.LogError($"SettingsMenuManager.PollInputAndToast failed: {ex}");
         }
     }
 

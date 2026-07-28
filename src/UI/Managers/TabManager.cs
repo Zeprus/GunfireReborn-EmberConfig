@@ -20,21 +20,23 @@ public sealed class TabManager
     private readonly TabActivationController activationController;
     private readonly TabBarController tabBar;
 
-    private M1ToggleGroup? m1ToggleGroup;
     private int activeTabIndex;
 
     public TabManager(UIFinder uiFinder)
     {
         this.uiFinder = uiFinder ?? throw new ArgumentNullException(nameof(uiFinder));
         tabBar = new TabBarController(nativeResolver);
-        activationController = new TabActivationController(customTabs, nativeResolver, uiFinder, tabBar);
+        activationController = new TabActivationController(customTabs, nativeResolver, uiFinder);
         customTabFactory = new CustomTabFactory(uiFinder);
         tabBar.OnTabSelected += OnTabSelected;
     }
 
     public string? CurrentCustomTab => activationController.CurrentCustomTab;
 
-    public Transform? GetContentForTab(string tabName, bool createIfMissing)
+    /// <summary>
+    /// Returns the existing content panel for a tab, or <c>null</c> if it does not exist.
+    /// </summary>
+    public Transform? GetContentForTab(string tabName)
     {
         var normalized = Normalize(tabName);
 
@@ -53,7 +55,26 @@ public sealed class TabManager
             customTabs.Unregister(normalized);
         }
 
-        if (!createIfMissing)
+        return null;
+    }
+
+    /// <summary>
+    /// Returns the existing content panel for a tab, creating a custom one if needed.
+    /// </summary>
+    public Transform? GetOrCreateContentForTab(string tabName)
+    {
+        var existing = GetContentForTab(tabName);
+        if (existing is not null)
+            return existing;
+
+        return CreateCustomTab(tabName);
+    }
+
+    private Transform? CreateCustomTab(string tabName)
+    {
+        var normalized = Normalize(tabName);
+
+        if (NativeTabResolver.IsNativeTab(normalized))
             return null;
 
         if (tabBar.Content is null || uiFinder.Viewport is null || uiFinder.Style is null)
@@ -85,7 +106,7 @@ public sealed class TabManager
             return;
         }
 
-        m1ToggleGroup = uiFinder.TabSwitch.GetComponent<M1ToggleGroup>();
+        var toggleGroup = uiFinder.TabSwitch.GetComponent<M1ToggleGroup>();
 
         var tabStyle = uiFinder.Style.Tab ?? TabStyle.Fallback(uiFinder.Style.Row.Title);
         tabBar.Initialize(uiFinder.TabSwitch, uiFinder.TabSwitch.parent, tabStyle);
@@ -94,26 +115,24 @@ public sealed class TabManager
         if (registry is not null)
         {
             foreach (var tab in registry.GetTabs())
-                GetContentForTab(tab, true);
+                GetOrCreateContentForTab(tab);
         }
 
-        tabBar.Rebuild(m1ToggleGroup);
+        tabBar.Rebuild();
 
-        var activeToggle = FindActiveToggleInGroup();
-        activeTabIndex = FindToggleIndex(activeToggle);
-        activationController.OnActiveToggleChanged(activeToggle, scroll: false);
+        var activeToggle = tabBar.GetActiveToggle();
+        activeTabIndex = tabBar.GetActiveIndex();
+        activationController.OnActiveToggleChanged(activeToggle);
         tabBar.ScrollToStart();
-        AttachArrowListeners();
+        tabBar.AttachArrowButtons(toggleGroup);
     }
 
     public void OnPanelClosed()
     {
-        DetachArrowListeners();
         customTabs.DestroyAll();
         nativeResolver.Clear();
         tabBar.Reset();
         activationController.ClearCurrentCustomTab();
-        m1ToggleGroup = null;
         activeTabIndex = 0;
     }
 
@@ -122,11 +141,14 @@ public sealed class TabManager
         if (tabBar.RingCount == 0)
             return;
 
-        var activeToggle = FindActiveToggleInGroup();
-        if (activeToggle is not null)
-            activeTabIndex = FindToggleIndex(activeToggle);
+        var activeToggle = tabBar.GetActiveToggle();
+        var activeIndex = tabBar.GetActiveIndex();
+        if (activeIndex == activeTabIndex)
+            return;
 
+        activeTabIndex = activeIndex;
         activationController.OnActiveToggleChanged(activeToggle);
+        tabBar.ScrollTo(activeToggle);
     }
 
     public void Update(float deltaTime)
@@ -145,6 +167,7 @@ public sealed class TabManager
 
         activeTabIndex = index;
         activationController.OnActiveToggleChanged(toggle);
+        tabBar.ScrollTo(toggle);
     }
 
     public void FinalizeLayout()
@@ -158,69 +181,16 @@ public sealed class TabManager
 
         if (uiFinder.TabSwitch is not null && tabBar.Content is not null)
         {
-            tabBar.Rebuild(m1ToggleGroup);
+            tabBar.Rebuild();
 
-            var activeToggle = FindActiveToggleInGroup();
-            activeTabIndex = FindToggleIndex(activeToggle);
-            activationController.OnActiveToggleChanged(activeToggle, scroll: false);
+            var activeToggle = tabBar.GetActiveToggle();
+            activeTabIndex = tabBar.GetActiveIndex();
+            activationController.OnActiveToggleChanged(activeToggle);
         }
         else
         {
             Plugin.Logger?.LogWarning($"TabManager.FinalizeLayout skipped: TabSwitch={(uiFinder.TabSwitch != null)}, Content={(tabBar.Content != null)}");
         }
-    }
-
-    private M1Toggle? FindActiveToggleInGroup() =>
-        tabBar.GetActiveToggle();
-
-    private int FindToggleIndex(M1Toggle? toggle)
-    {
-        if (toggle is null)
-            return 0;
-
-        var ring = tabBar.Ring;
-        for (int i = 0; i < ring.Count; i++)
-        {
-            if (ring[i] == toggle)
-                return i;
-        }
-
-        return 0;
-    }
-
-    private void AttachArrowListeners()
-    {
-        if (m1ToggleGroup is null)
-        {
-            Plugin.Logger?.LogWarning("AttachArrowListeners: m1ToggleGroup is null");
-            return;
-        }
-
-        var left = m1ToggleGroup.m_Left;
-        var right = m1ToggleGroup.m_Right;
-
-        if (left is not null)
-        {
-            left.onClick.RemoveAllListeners();
-            Action leftClick = () => tabBar.NavigatePrevious();
-            left.onClick.AddListener(leftClick);
-        }
-
-        if (right is not null)
-        {
-            right.onClick.RemoveAllListeners();
-            Action rightClick = () => tabBar.NavigateNext();
-            right.onClick.AddListener(rightClick);
-        }
-    }
-
-    private void DetachArrowListeners()
-    {
-        if (m1ToggleGroup is null)
-            return;
-
-        m1ToggleGroup.m_Left?.onClick.RemoveAllListeners();
-        m1ToggleGroup.m_Right?.onClick.RemoveAllListeners();
     }
 
     private static string Normalize(string name) => name?.Trim() ?? string.Empty;

@@ -6,7 +6,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public abstract class SettingRowBase : ISettingRow
+internal abstract class SettingRowBase : ISettingRow
 {
     public Transform Transform { get; }
     public GameObject GameObject => Transform.gameObject;

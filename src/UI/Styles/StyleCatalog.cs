@@ -35,7 +35,7 @@ internal sealed class StyleCatalog
 
     internal static StyleCatalog? CaptureFrom(Transform panelRoot)
     {
-        var row = RowStyle.Capture(panelRoot);
+        var row = RowStyleCapture.Capture(panelRoot);
         if (row is null)
             return null;
 
@@ -43,12 +43,12 @@ internal sealed class StyleCatalog
 
         return new StyleCatalog(
             rowStyle,
-            TabStyle.Capture(panelRoot, rowStyle.Title),
-            GroupHeaderStyle.Capture(panelRoot, rowStyle.Title) ?? GroupHeaderStyle.Default(rowStyle.Title),
-            KeybindButtonStyle.Capture(panelRoot, rowStyle.Title, rowStyle.BackgroundSprite),
-            SliderStyle.Capture(panelRoot, rowStyle.BackgroundSprite, rowStyle.Title),
-            ToggleStyle.Capture(panelRoot, rowStyle.BackgroundSprite),
-            DropdownStyle.Capture(panelRoot, rowStyle.BackgroundSprite, rowStyle.Title),
-            InputStyle.Capture(panelRoot, rowStyle.BackgroundSprite, rowStyle.Title));
+            TabStyleCapture.Capture(panelRoot, rowStyle.Title),
+            GroupHeaderStyleCapture.Capture(panelRoot, rowStyle.Title) ?? GroupHeaderStyle.Default(rowStyle.Title),
+            KeybindButtonStyleCapture.Capture(panelRoot, rowStyle.Title, rowStyle.BackgroundSprite),
+            SliderStyleCapture.Capture(panelRoot, rowStyle.BackgroundSprite, rowStyle.Title),
+            ToggleStyleCapture.Capture(panelRoot, rowStyle.BackgroundSprite),
+            DropdownStyleCapture.Capture(panelRoot, rowStyle.BackgroundSprite, rowStyle.Title),
+            InputStyleCapture.Capture(panelRoot, rowStyle.BackgroundSprite, rowStyle.Title));
     }
 }

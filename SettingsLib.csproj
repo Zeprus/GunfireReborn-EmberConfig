@@ -73,7 +73,7 @@
     </Reference>
   </ItemGroup>
 
-  <Target Name="Deploy" AfterTargets="Build" Condition="'$(DeployToPlugins)' != 'false'">
+  <Target Name="Deploy" AfterTargets="Build;Publish" Condition="'$(DeployToPlugins)' != 'false'">
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BepInExDir)\plugins" />
   </Target>
 

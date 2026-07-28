@@ -5,7 +5,7 @@ using SettingsLib.Core;
 using TMPro;
 using UnityEngine;
 
-public class InputFieldRow : SettingRowBase
+internal class InputFieldRow : SettingRowBase
 {
     private readonly uint clickSoundEventId;
 
