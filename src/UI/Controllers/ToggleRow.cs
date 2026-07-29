@@ -26,6 +26,7 @@ internal class ToggleRow : SettingRowBase
 
         if (toggle is not null)
         {
+            toggle.onValueChanged ??= new M1Toggle.ToggleEvent();
             onToggled = OnToggled;
             toggle.onValueChanged.RemoveAllListeners();
             toggle.onValueChanged.AddListener(onToggled);
@@ -36,7 +37,7 @@ internal class ToggleRow : SettingRowBase
     {
         SafeSetText(titleText, Entry?.Label ?? string.Empty);
 
-        if (toggle is not null && Entry?.Config.BoxedValue is bool b)
+        if (toggle is not null && toggle.onValueChanged is not null && Entry?.Config.BoxedValue is bool b)
         {
             toggle.onValueChanged.RemoveAllListeners();
             toggle.isOn = b;

@@ -13,7 +13,7 @@ internal sealed class GroupBuilder
 {
     private readonly UIFinder uiFinder;
     private readonly Dictionary<string, Transform> groupContainers = new(StringComparer.OrdinalIgnoreCase);
-    private readonly HashSet<(string Group, string SubGroup)> createdSubHeaders = new();
+    private readonly HashSet<string> createdSubHeaders = new(StringComparer.OrdinalIgnoreCase);
 
     public GroupBuilder(UIFinder uiFinder)
     {
@@ -37,12 +37,13 @@ internal sealed class GroupBuilder
     /// <returns>The group container transform.</returns>
     public Transform GetOrCreateGroupContainer(Transform content, string group)
     {
-        if (groupContainers.TryGetValue(group, out var existing))
+        var key = GetGroupContainerKey(content, group);
+        if (groupContainers.TryGetValue(key, out var existing))
             return existing;
 
         var catalog = uiFinder.Style ?? throw new InvalidOperationException("StyleCatalog not captured.");
         var container = GroupContainerBuilder.Build($"SL_Group_{group}", group, catalog.Row, catalog.GroupHeader, content);
-        groupContainers[group] = container;
+        groupContainers[key] = container;
         return container;
     }
 
@@ -55,7 +56,7 @@ internal sealed class GroupBuilder
     /// <param name="subGroup">The sub-group name.</param>
     public void EnsureSubGroupHeader(Transform groupContainer, string group, string subGroup)
     {
-        if (!createdSubHeaders.Add((group, subGroup))) return;
+        if (!createdSubHeaders.Add(GetSubGroupHeaderKey(groupContainer, group, subGroup))) return;
 
         var catalog = uiFinder.Style;
         if (catalog is null) return;
@@ -81,4 +82,10 @@ internal sealed class GroupBuilder
 
         go.SetActive(true);
     }
+
+    private static string GetGroupContainerKey(Transform content, string group)
+        => $"{content.GetInstanceID()}::{group}";
+
+    private static string GetSubGroupHeaderKey(Transform groupContainer, string group, string subGroup)
+        => $"{groupContainer.GetInstanceID()}::{group}::{subGroup}";
 }

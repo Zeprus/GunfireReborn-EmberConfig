@@ -13,18 +13,16 @@ internal static class InputElementBuilder
 
         var item = RowElementBuilder.CreateItem(style, root);
         var inputObj = RowElementBuilder.CreateObject("InputField", item.transform);
-        var inputRect = inputStyle?.InputRect ?? new RectData(
-            new Vector2(0f, 0.5f), new Vector2(1f, 0.5f),
-            new Vector2(0f, RowElementBuilder.Metrics.ControlHeight),
-            Vector2.zero, new Vector2(0.5f, 0.5f));
+        inputObj.SetActive(false);
+
+        var inputRect = inputStyle?.InputRect ?? InputStyle.DefaultInputRect;
         inputRect.Apply(inputObj.GetComponent<RectTransform>());
 
         var image = RowElementBuilder.AddImage(
             inputObj,
             inputStyle?.BackgroundSprite ?? style.BackgroundSprite,
             inputStyle?.BackgroundType ?? Image.Type.Sliced,
-            inputStyle?.BackgroundColor ?? new Color(1f, 1f, 1f, 0.1f));
-        inputObj.AddComponent<CanvasRenderer>();
+            inputStyle?.BackgroundColor ?? InputStyle.DefaultBackgroundColor);
 
         var textAreaObj = RowElementBuilder.CreateObject("Text Area", inputObj.transform);
         var textAreaRect = inputStyle?.TextAreaRect ?? InputStyle.DefaultTextAreaRect;
@@ -49,12 +47,16 @@ internal static class InputElementBuilder
         placeholder.raycastTarget = false;
 
         var input = inputObj.AddComponent<TMP_InputField>();
+        input.onEndEdit ??= new TMP_InputField.SubmitEvent();
+        input.onSelect ??= new TMP_InputField.SelectionEvent();
         input.textViewport = textAreaObj.GetComponent<RectTransform>();
         input.textComponent = text;
         input.placeholder = placeholder;
         input.targetGraphic = image;
         input.pointSize = (inputStyle?.TextAppearance ?? style.Title).FontSize;
         input.interactable = true;
+
+        inputObj.SetActive(true);
 
         VanillaComponentApplier.ApplyToRow(root.transform, input);
         VanillaComponentApplier.AttachAudio(input.transform);

@@ -39,7 +39,10 @@ internal class InputFieldRow : SettingRowBase
     {
         SafeSetText(titleText, Entry?.Label ?? string.Empty);
         if (inputField is not null)
+        {
             inputField.text = Entry?.Config.BoxedValue?.ToString() ?? string.Empty;
+            inputField.ForceLabelUpdate();
+        }
     }
 
     private void OnEndEdit(string text)

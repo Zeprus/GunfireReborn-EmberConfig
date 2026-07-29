@@ -2,24 +2,24 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <AssemblyName>EmberConfig</AssemblyName>
-    <RootNamespace>EmberConfig</RootNamespace>
-    <Product>EmberConfig</Product>
+    <AssemblyName>EmberConfig.ExampleMod</AssemblyName>
+    <RootNamespace>EmberConfig.ExampleMod</RootNamespace>
+    <Product>EmberConfig Example</Product>
     <Version>1.0.0</Version>
-    <BepInExPluginGuid>zeprus.gunfire.EmberConfig</BepInExPluginGuid>
-    <BepInExPluginName>EmberConfig</BepInExPluginName>
+    <BepInExPluginGuid>zeprus.gunfire.EmberConfig.ExampleMod</BepInExPluginGuid>
+    <BepInExPluginName>EmberConfig Example</BepInExPluginName>
     <BepInExPluginVersion>1.0.0</BepInExPluginVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1591;CS1573</NoWarn>
+    <DeployToPlugins>false</DeployToPlugins>
     <RestoreAdditionalProjectSources>
       https://api.nuget.org/v3/index.json;
       https://nuget.bepinex.dev/v3/index.json;
       https://nuget.samboy.dev/v3/index.json
     </RestoreAdditionalProjectSources>
-    <DefaultItemExcludes>$(DefaultItemExcludes);EmberConfig.Tests\**;ExampleMod\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <PropertyGroup Label="GamePaths">
@@ -34,41 +34,22 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>$(GameLibDir)\Assembly-CSharp.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <!--
-      Il2Cppmscorlib is the IL2CPP proxy for mscorlib and is required for Il2CppSystem.*
-      collections (e.g. Il2CppSystem.Collections.Generic.List used by TMP_Dropdown).
-      This is distinct from the forbidden mscorlib.dll / netstandard.dll references.
-    -->
+    <ProjectReference Include="..\EmberConfig.csproj">
+      <Private>false</Private>
+    </ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="Il2Cppmscorlib">
       <HintPath>$(GameLibDir)\Il2Cppmscorlib.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Unity.TextMeshPro">
-      <HintPath>$(GameLibDir)\Unity.TextMeshPro.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>$(GameLibDir)\UnityEngine.CoreModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine.InputModule">
-      <HintPath>$(GameLibDir)\UnityEngine.InputModule.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="UnityEngine.UI">
-      <HintPath>$(GameLibDir)\UnityEngine.UI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="UnityEngine.TextRenderingModule">
-      <HintPath>$(GameLibDir)\UnityEngine.TextRenderingModule.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="UnityEngine.UIModule">
-      <HintPath>$(GameLibDir)\UnityEngine.UIModule.dll</HintPath>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>$(GameLibDir)\UnityEngine.AudioModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>

@@ -12,9 +12,11 @@ internal static class ToggleElementBuilder
 
         var item = RowElementBuilder.CreateItem(style, root);
         var toggleObj = RowElementBuilder.CreateObject("Toggle", item.transform);
+        toggleObj.SetActive(false);
         RowElementBuilder.SetRect(toggleObj, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(RowElementBuilder.Metrics.ControlHeight, RowElementBuilder.Metrics.ControlHeight), new Vector2(20f, 0f));
 
         var toggle = toggleObj.AddComponent<M1Toggle>();
+        toggle.onValueChanged ??= new M1Toggle.ToggleEvent();
         toggleObj.AddComponent<CanvasRenderer>();
 
         var bgObj = RowElementBuilder.CreateObject("Background", toggleObj.transform);
@@ -29,6 +31,8 @@ internal static class ToggleElementBuilder
         toggle.graphic = checkObj.GetComponent<Image>();
         toggle.ungraphic = null;
         toggle.interactable = true;
+
+        toggleObj.SetActive(true);
 
         VanillaComponentApplier.ApplyToRow(root.transform, toggle);
         VanillaComponentApplier.AttachAudio(toggle.transform);

@@ -24,9 +24,11 @@ internal static class SliderElementBuilder
         hlg.childAlignment = TextAnchor.MiddleLeft;
 
         var sliderObj = RowElementBuilder.CreateObject("Slider", sliderPcUnit.transform);
+        sliderObj.SetActive(false);
         sliderStyle.SliderRect.Apply(sliderObj.GetComponent<RectTransform>());
 
         var slider = sliderObj.AddComponent<M1Slider>();
+        slider.onValueChanged ??= new Slider.SliderEvent();
         sliderObj.AddComponent<CanvasRenderer>();
 
         var background = RowElementBuilder.CreateObject("Background", sliderObj.transform);
@@ -59,6 +61,8 @@ internal static class SliderElementBuilder
         slider.fillRect = fill.GetComponent<RectTransform>();
         slider.handleRect = handle.GetComponent<RectTransform>();
         slider.interactable = true;
+
+        sliderObj.SetActive(true);
 
         var numObj = RowElementBuilder.CreateObject("Num", sliderPcUnit.transform);
         sliderStyle.NumRect.Apply(numObj.GetComponent<RectTransform>());

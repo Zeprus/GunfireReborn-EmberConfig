@@ -31,6 +31,7 @@ internal class DropdownRow : SettingRowBase
 
         if (dropdown is not null)
         {
+            dropdown.onValueChanged ??= new TMP_Dropdown.DropdownEvent();
             options = OptionResolver.Resolve(entry);
             var il2cppOptions = new Il2CppSystem.Collections.Generic.List<TMP_Dropdown.OptionData>();
             foreach (var opt in options)
@@ -75,7 +76,7 @@ internal class DropdownRow : SettingRowBase
         if (index < 0 && current is not null)
             index = OptionResolver.FindIndexByDisplayName(options, current);
 
-        if (index >= 0)
+        if (index >= 0 && dropdown.onValueChanged is not null)
         {
             dropdown.onValueChanged.RemoveAllListeners();
             dropdown.value = index;

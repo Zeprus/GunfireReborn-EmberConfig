@@ -31,6 +31,7 @@ internal class SliderRow : SettingRowBase
         isInt = entry.Config.SettingType == typeof(int);
 
         if (slider is null) return;
+        slider.onValueChanged ??= new Slider.SliderEvent();
 
         if (AcceptableValueResolver.TryGetRange(entry.Config.Description?.AcceptableValues, out var min, out var max))
         {
@@ -56,10 +57,17 @@ internal class SliderRow : SettingRowBase
     {
         SafeSetText(titleText, Entry?.Label ?? string.Empty);
 
-        if (slider is not null && Entry?.Config.BoxedValue is not null)
+        if (slider is not null && slider.onValueChanged is not null && Entry?.Config.BoxedValue is not null)
         {
             slider.onValueChanged.RemoveAllListeners();
-            slider.value = Convert.ToSingle(Entry.Config.BoxedValue);
+            try
+            {
+                slider.value = Convert.ToSingle(Entry.Config.BoxedValue);
+            }
+            catch (Exception ex)
+            {
+                Plugin.Logger?.LogWarning($"EmberConfig: failed to set slider value for '{Entry.Label}': {ex.Message}");
+            }
             slider.onValueChanged.AddListener(onSliderChanged!);
         }
 
@@ -86,7 +94,14 @@ internal class SliderRow : SettingRowBase
         var value = Entry?.Config.BoxedValue;
         if (value is null) return;
 
-        valueText.text = isInt ? value.ToString() : $"{Convert.ToSingle(value):F2}";
+        try
+        {
+            valueText.text = isInt ? value.ToString() : $"{Convert.ToSingle(value):F2}";
+        }
+        catch (Exception)
+        {
+            valueText.text = string.Empty;
+        }
     }
 
 

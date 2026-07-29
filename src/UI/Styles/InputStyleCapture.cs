@@ -7,11 +7,20 @@ using UnityEngine.UI;
 
 internal static class InputStyleCapture
 {
-    internal static InputStyle? Capture(Transform panelRoot, Sprite? fallbackSprite, TextAppearance fallbackText)
+    internal static InputStyle Capture(Transform panelRoot, Sprite? fallbackSprite, TextAppearance fallbackText)
     {
         var input = FindInputFieldTransform(panelRoot);
         if (input is null)
-            return null;
+        {
+            return new InputStyle(
+                InputStyle.DefaultBackgroundColor,
+                fallbackSprite,
+                Image.Type.Sliced,
+                InputStyle.DefaultInputRect,
+                InputStyle.DefaultTextAreaRect,
+                fallbackText,
+                fallbackText with { Color = new Color(1f, 1f, 1f, 0.4f) });
+        }
 
         var image = input.GetComponent<Image>();
         var inputRect = RectData.From(input.GetComponent<RectTransform>());

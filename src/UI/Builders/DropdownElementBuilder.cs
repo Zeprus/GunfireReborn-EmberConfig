@@ -17,7 +17,8 @@ internal static class DropdownElementBuilder
 
         var rowItem = RowElementBuilder.CreateItem(style, root);
         var dropdownObj = RowElementBuilder.CreateObject("Dropdown", rowItem.transform);
-        item.ItemRect.Apply(dropdownObj.GetComponent<RectTransform>());
+        dropdownObj.SetActive(false);
+        RowElementBuilder.SetRect(dropdownObj, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         var image = RowElementBuilder.AddImage(dropdownObj, item.ItemSprite, item.ItemType, item.ItemColor);
 
         var labelObj = RowElementBuilder.CreateObject("Label", dropdownObj.transform);
@@ -26,7 +27,8 @@ internal static class DropdownElementBuilder
 
         var arrowObj = RowElementBuilder.CreateObject("Arrow", dropdownObj.transform);
         item.ArrowRect.Apply(arrowObj.GetComponent<RectTransform>());
-        RowElementBuilder.AddImage(arrowObj, item.ArrowSprite, item.ArrowType, item.ArrowColor);
+        var arrowImage = RowElementBuilder.AddImage(arrowObj, item.ArrowSprite, item.ArrowType, item.ArrowColor);
+        arrowImage.raycastTarget = false;
 
         var templateObj = RowElementBuilder.CreateObject("Template", dropdownObj.transform);
         template.TemplateRect.Apply(templateObj.GetComponent<RectTransform>());
@@ -91,14 +93,17 @@ internal static class DropdownElementBuilder
         scrollRect.verticalScrollbar = uiScrollbar;
 
         var dropdown = dropdownObj.AddComponent<TMP_Dropdown>();
+        dropdown.onValueChanged ??= new TMP_Dropdown.DropdownEvent();
         dropdown.targetGraphic = image;
         dropdown.captionText = labelText;
         dropdown.template = templateObj.GetComponent<RectTransform>();
         dropdown.itemText = itemLabelText;
         dropdown.interactable = true;
 
+        dropdownObj.SetActive(true);
+
         VanillaComponentApplier.ApplyToRow(root.transform, dropdown);
-        VanillaComponentApplier.AttachAudio(dropdown.transform);
+        VanillaComponentApplier.AttachAudio(dropdownObj.transform, false);
 
         return root.transform;
     }

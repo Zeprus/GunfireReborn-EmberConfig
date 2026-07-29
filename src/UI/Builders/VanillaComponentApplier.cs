@@ -36,7 +36,7 @@ internal static class VanillaComponentApplier
             AttachAudio(controlTransform);
     }
 
-    internal static void AttachAudio(Transform target)
+    internal static void AttachAudio(Transform target, bool addMouseClickTrigger = true)
     {
         var go = target.gameObject;
         var akGameObj = go.GetComponent<AkGameObj>() ?? go.AddComponent<AkGameObj>();
@@ -46,7 +46,7 @@ internal static class VanillaComponentApplier
         if (target.GetComponent<M1Button>() is M1Button m1Button)
             akGameObj.btn = m1Button;
 
-        if (go.GetComponent<AkTriggerMouseClick>() is null)
+        if (addMouseClickTrigger && go.GetComponent<AkTriggerMouseClick>() is null)
             go.AddComponent<AkTriggerMouseClick>();
     }
 }
