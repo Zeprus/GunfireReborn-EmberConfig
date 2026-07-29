@@ -4,7 +4,7 @@ internal enum RowType
 {
     Keybind,
     Slider,
-    Toggle,
+    Switch,
     Dropdown,
-    InputField
+    InputField,
 }

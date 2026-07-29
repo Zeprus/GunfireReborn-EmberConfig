@@ -10,6 +10,7 @@ A sample BepInEx 6 plugin that shows how to register every kind of setting and k
   `Example Mod: Gameplay`, and `Example Mod: Network & Input`.
 - Scalar setting types: `bool`, `int`, `float`, `string`, and `enum`.
 - Ranges (`AcceptableValueRange`) and fixed lists (`AcceptableValueList`).
+- `SettingControlStyle` overrides (`Switch`, `Dropdown`, `Carousel`).
 - Groups and sub-groups inside the settings panel.
 - Single-key and dual-key keybinds with `OnPressed` / `OnReleased` callbacks.
 - `OnValueChanged` callbacks that update Unity state such as volume, frame rate, and example GameObjects.
@@ -39,5 +40,10 @@ EmberConfig must also be present in `BepInEx/plugins/`.
 2. Open Settings.
 3. Switch through the five custom tabs (`Example Mod: General`, `Example Mod: Visuals`, `Example Mod: Rendering`, `Example Mod: Gameplay`, `Example Mod: Network & Input`) and verify the groups appear on each.
 4. Switch to the vanilla `Audio`, `Video`, `Game Settings`, and `Mouse/Keyboard` tabs and verify the example rows appear.
-5. Change a slider, toggle, dropdown, or input value and check `BepInEx/LogOutput.log` for callback messages.
-6. Click a keybind capture button, press a key, and verify the vanilla cover mask and toast appear.
+5. Verify the different control styles:
+   - `Show FPS Marker`, `Show Hints`, and `Enable Overlay` render as vanilla `Switch` two-option toggles.
+   - `Show Hints` uses the custom `SwitchLabels: new SwitchLabels("Show", "Hide")` labels.
+   - `Difficulty` and `Region` render as dropdowns.
+   - `Difficulty Carousel` requests the `Carousel` style (currently falls back to a dropdown until the carousel builder is implemented).
+6. Change a slider, toggle, dropdown, or input value and check `BepInEx/LogOutput.log` for callback messages.
+7. Click a keybind capture button, press a key, and verify the vanilla cover mask and toast appear.

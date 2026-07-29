@@ -18,7 +18,9 @@ public sealed record SettingOptions<T>(
     string Group,
     string? SubGroup = null,
     Action<T>? OnValueChanged = null,
-    AcceptableValueBase? AcceptableValues = null)
+    AcceptableValueBase? AcceptableValues = null,
+    SettingControlStyle ControlStyle = SettingControlStyle.Auto,
+    SwitchLabels? SwitchLabels = null)
 {
     /// <summary>
     /// Returns a copy of these options with <see cref="Tab"/> set to the

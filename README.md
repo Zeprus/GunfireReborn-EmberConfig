@@ -81,6 +81,7 @@ public static class EmberConfigCompatibility
 All public API lives in the `EmberConfig.Public` namespace.
 
 - `SettingsMenu.Register<T>(ConfigFile configFile, SettingOptions<T> options)`
+- `SettingControlStyle` — choose the control used for a setting (`Auto`, `Switch`, `Dropdown`, `Carousel`).
 - `SettingsMenu.Register<T>(ConfigEntry<T> config, SettingOptions<T> options)`
 - `SettingsMenu.RegisterKeybind(ConfigFile configFile, KeybindOptions options)`
 - `SettingsMenu.RegisterKeybind(ConfigEntry<KeyCode> primary, ConfigEntry<KeyCode>? secondary, KeybindOptions options)`
@@ -168,4 +169,27 @@ var customOptions = new SettingOptions<bool>(
     Group: "My Mod");
 
 SettingsMenu.Register(Config, customOptions);
+```
+
+### Choosing a control style
+
+By default EmberConfig picks the control (`Switch` for booleans, `Dropdown` for enums and lists). You can override this with `ControlStyle`. Incompatible styles (e.g. `Dropdown` on a `bool`) fall back to `Auto`.
+
+For a `Switch` you can also override the `On`/`Off` labels:
+
+```csharp
+using EmberConfig.Public;
+
+var switchOptions = new SettingOptions<bool>(
+    Section: "MyMod",
+    Key: "ShowHints",
+    DefaultValue: true,
+    Description: "Show hint markers",
+    Label: "Show Hints",
+    Tab: SettingsTab.GameSettings.ToNativeName(),
+    Group: "My Mod",
+    ControlStyle: SettingControlStyle.Switch,
+    SwitchLabels: new SwitchLabels("Show", "Hide"));
+
+SettingsMenu.Register(Config, switchOptions);
 ```

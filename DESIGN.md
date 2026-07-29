@@ -22,12 +22,22 @@ A clean, standalone BepInEx 6 plugin that exposes a generic `SettingsMenu` API f
 ```csharp
 public readonly record struct SettingLocation(string Tab, string Group, string? SubGroup = null);
 
+public enum SettingControlStyle
+{
+    Auto,
+    Switch,
+    Dropdown,
+    Carousel,
+}
+
 public interface ISettingEntry
 {
     string Id { get; }
     ConfigEntryBase Config { get; }
     string Label { get; }
     SettingLocation Location { get; }
+    SettingControlStyle ControlStyle { get; }
+    SwitchLabels? SwitchLabels { get; }
 }
 
 public sealed class SettingEntry<T> : ISettingEntry
@@ -36,6 +46,8 @@ public sealed class SettingEntry<T> : ISettingEntry
     public ConfigEntry<T> Config { get; }
     public string Label { get; }
     public SettingLocation Location { get; }
+    public SettingControlStyle ControlStyle { get; }
+    public SwitchLabels? SwitchLabels { get; }
     public Action<T>? OnValueChanged { get; }
 
     ConfigEntryBase ISettingEntry.Config => Config;
@@ -48,6 +60,8 @@ public sealed class KeybindEntry : ISettingEntry
     public ConfigEntry<KeyCode>? Secondary { get; }
     public string Label { get; }
     public SettingLocation Location { get; }
+    public SettingControlStyle ControlStyle { get; }
+    public SwitchLabels? SwitchLabels { get; }
     public Action? OnPressed { get; }
     public Action? OnReleased { get; }
 
@@ -94,7 +108,9 @@ public sealed record SettingOptions<T>(
     string Group,
     string? SubGroup = null,
     Action<T>? OnValueChanged = null,
-    AcceptableValueBase? AcceptableValues = null)
+    AcceptableValueBase? AcceptableValues = null,
+    SettingControlStyle ControlStyle = SettingControlStyle.Auto,
+    SwitchLabels? SwitchLabels = null)
 {
     public SettingOptions<T> WithTab(SettingsTab tab) => this with { Tab = tab.ToNativeName() };
 }
@@ -119,6 +135,8 @@ public sealed record KeybindOptions(
 - `tab` may be a native tab name (`Game Settings`, `Mouse/Keyboard`, `Video`, `Audio`, `Controller`) or a custom name that becomes a new tab. Use `WithTab(SettingsTab)` for the enum values.
 - `group` is normally the mod name; one group header is created per mod per tab.
 - `subGroup` is optional and rendered with a visually different header.
+- `ControlStyle` lets the mod author pick the control used for a setting: `Auto` chooses based on the value type (`Switch` for `bool`, `Dropdown` for enums/lists), `Switch` is the boolean style, `Dropdown` and `Carousel` are the two list styles. Incompatible styles (e.g. `Dropdown` on a `bool`, `Switch` on an enum) are ignored and logged as a warning; the resolver falls back to `Auto`.
+- `SwitchLabels` lets the mod author override the `On`/`Off` text shown by a `Switch` control. The default is `On`/`Off` regardless of the captured vanilla labels.
 
 ## Dual Keybinding and BepInEx Config
 
@@ -224,7 +242,7 @@ UI/Builders (pure GameObject construction, no logic or data binding)
                            + Metrics constants (layout dimensions, control colors)
   GroupBuilder          -> creates and caches group containers and sub-group headers
   SliderElementBuilder  -> Build(name, RowStyle, SliderStyle, parent) -> Transform
-  ToggleElementBuilder  -> Build(name, RowStyle, ToggleStyle, parent) -> Transform
+  SwitchElementBuilder  -> Build(name, RowStyle, SwitchStyle, parent) -> Transform
   KeybindElementBuilder -> Build(name, RowStyle, KeybindButtonStyle, parent) -> Transform
   DropdownElementBuilder -> Build(name, RowStyle, DropdownStyle, parent) -> Transform
   InputElementBuilder   -> Build(name, RowStyle, InputStyle?, parent) -> Transform
@@ -238,7 +256,7 @@ UI/Controllers (row controllers with ConfigEntry two-way binding, implement ISet
   KeybindCaptureController -> polls input and drives the WaitRelease/WaitPress/ReleaseNextFrame state machine
   KeybindCoverMask      -> manages the vanilla covery_mask during keybind capture
   SliderRow             -> float/int range; cached onSliderChanged delegate; posts Wwise audio throttled
-  ToggleRow             -> bool on/off; cached onToggled delegate; posts Wwise audio on change
+  SwitchRow             -> bool On/Off two-option toggle; posts Wwise audio on change
   DropdownRow           -> enum / acceptable-value list; uses OptionResolver; posts Wwise audio
   InputFieldRow         -> string (TMP_InputField); cached onEndEdit delegate; posts Wwise audio on focus
   RowHoverHandler       -> MonoBehaviour on each row root; tints background Image and writes
@@ -283,7 +301,7 @@ Patches
 - `GroupHeaderStyleCapture`
 - `KeybindButtonStyleCapture`
 - `SliderStyleCapture`
-- `ToggleStyleCapture`
+- `SwitchStyleCapture`
 - `DropdownStyleCapture`
 - `InputStyleCapture`
 
@@ -393,7 +411,7 @@ Mods/EmberConfig/
     │   │   ├── GroupBuilder.cs
     │   │   ├── GroupContainerBuilder.cs
     │   │   ├── SliderElementBuilder.cs
-    │   │   ├── ToggleElementBuilder.cs
+    │   │   ├── SwitchElementBuilder.cs
     │   │   ├── KeybindElementBuilder.cs
     │   │   ├── DropdownElementBuilder.cs
     │   │   ├── InputElementBuilder.cs
@@ -406,7 +424,7 @@ Mods/EmberConfig/
     │   │   ├── KeybindCaptureController.cs
     │   │   ├── KeybindCoverMask.cs
     │   │   ├── SliderRow.cs
-    │   │   ├── ToggleRow.cs
+    │   │   ├── SwitchRow.cs
     │   │   ├── DropdownRow.cs
     │   │   ├── InputFieldRow.cs
     │   │   └── RowHoverHandler.cs
@@ -422,8 +440,8 @@ Mods/EmberConfig/
     │   │   ├── GroupHeaderStyleCapture.cs
     │   │   ├── KeybindButtonStyle.cs
     │   │   ├── KeybindButtonStyleCapture.cs
-    │   │   ├── ToggleStyle.cs
-    │   │   ├── ToggleStyleCapture.cs
+    │   │   ├── SwitchStyle.cs
+    │   │   ├── SwitchStyleCapture.cs
     │   │   ├── SliderStyle.cs
     │   │   ├── SliderStyleCapture.cs
     │   │   ├── DropdownStyle.cs

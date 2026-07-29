@@ -2,6 +2,7 @@ namespace EmberConfig.Core;
 
 using System;
 using BepInEx.Configuration;
+using EmberConfig.Public;
 
 public sealed class SettingEntry<T> : ISettingEntry
 {
@@ -10,11 +11,13 @@ public sealed class SettingEntry<T> : ISettingEntry
     public string Label { get; }
     public SettingLocation Location { get; }
     public Action<T>? OnValueChanged { get; }
+    public SettingControlStyle ControlStyle { get; }
+    public SwitchLabels? SwitchLabels { get; }
     public event Action? ValueChanged;
 
     ConfigEntryBase ISettingEntry.Config => Config;
 
-    public SettingEntry(string id, ConfigEntry<T> config, string label, SettingLocation location, Action<T>? onValueChanged = null)
+    public SettingEntry(string id, ConfigEntry<T> config, string label, SettingLocation location, Action<T>? onValueChanged = null, SettingControlStyle controlStyle = SettingControlStyle.Auto, SwitchLabels? switchLabels = null)
     {
         if (string.IsNullOrWhiteSpace(id))
             throw new ArgumentException("Id cannot be empty.", nameof(id));
@@ -26,6 +29,8 @@ public sealed class SettingEntry<T> : ISettingEntry
         Label = label;
         Location = location;
         OnValueChanged = onValueChanged;
+        ControlStyle = controlStyle;
+        SwitchLabels = switchLabels;
 
         Config.SettingChanged += (_, _) =>
         {

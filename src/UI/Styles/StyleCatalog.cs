@@ -9,7 +9,7 @@ internal sealed class StyleCatalog
     public GroupHeaderStyle GroupHeader { get; }
     public KeybindButtonStyle? KeybindButton { get; }
     public SliderStyle? Slider { get; }
-    public ToggleStyle? Toggle { get; }
+    public SwitchStyle? Switch { get; }
     public DropdownStyle? Dropdown { get; }
     public InputStyle? Input { get; }
 
@@ -19,7 +19,7 @@ internal sealed class StyleCatalog
         GroupHeaderStyle group,
         KeybindButtonStyle? keybind,
         SliderStyle? slider,
-        ToggleStyle? toggle,
+        SwitchStyle? @switch,
         DropdownStyle? dropdown,
         InputStyle? input)
     {
@@ -28,7 +28,7 @@ internal sealed class StyleCatalog
         GroupHeader = group;
         KeybindButton = keybind;
         Slider = slider;
-        Toggle = toggle;
+        Switch = @switch;
         Dropdown = dropdown;
         Input = input;
     }
@@ -47,7 +47,7 @@ internal sealed class StyleCatalog
             GroupHeaderStyleCapture.Capture(panelRoot, rowStyle.Title) ?? GroupHeaderStyle.Default(rowStyle.Title),
             KeybindButtonStyleCapture.Capture(panelRoot, rowStyle.Title, rowStyle.BackgroundSprite),
             SliderStyleCapture.Capture(panelRoot, rowStyle.BackgroundSprite, rowStyle.Title),
-            ToggleStyleCapture.Capture(panelRoot, rowStyle.BackgroundSprite),
+            SwitchStyleCapture.Capture(panelRoot, rowStyle.BackgroundSprite, rowStyle.Title),
             DropdownStyleCapture.Capture(panelRoot, rowStyle.BackgroundSprite, rowStyle.Title),
             InputStyleCapture.Capture(panelRoot, rowStyle.BackgroundSprite, rowStyle.Title));
     }

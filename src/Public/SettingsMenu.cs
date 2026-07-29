@@ -55,7 +55,7 @@ public static class SettingsMenu
 
         var location = CreateLocation(options.Tab, options.Group, options.SubGroup);
         var id = Guid.NewGuid().ToString("N");
-        var entry = new SettingEntry<T>(id, config, options.Label, location, options.OnValueChanged);
+        var entry = new SettingEntry<T>(id, config, options.Label, location, options.OnValueChanged, options.ControlStyle, options.SwitchLabels);
 
         SettingsRegistry.Current.Register(entry);
         return config;

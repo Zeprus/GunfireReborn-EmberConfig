@@ -2,6 +2,7 @@ namespace EmberConfig.UI;
 
 using System;
 using EmberConfig.Core;
+using EmberConfig.Public;
 using UnityEngine;
 
 internal sealed class RowFactory
@@ -32,7 +33,7 @@ internal sealed class RowFactory
         {
             RowType.Keybind => BuildKeybindRow(name, entry.Label, catalog, content, fallbackClickSound),
             RowType.Slider => BuildSliderRow(name, entry.Label, catalog, content, fallbackClickSound),
-            RowType.Toggle => BuildToggleRow(name, entry.Label, catalog, content, fallbackClickSound),
+            RowType.Switch => BuildSwitchRow(name, entry.Label, catalog, content, fallbackClickSound, entry.SwitchLabels),
             RowType.Dropdown => BuildDropdownRow(name, entry.Label, catalog, content, fallbackClickSound),
             RowType.InputField or _ => BuildInputField(name, catalog, content, fallbackClickSound)
         };
@@ -65,15 +66,18 @@ internal sealed class RowFactory
         return null;
     }
 
-    private static ISettingRow? BuildToggleRow(string name, string label, StyleCatalog catalog, Transform content, uint fallbackClickSound)
+    private static ISettingRow? BuildSwitchRow(string name, string label, StyleCatalog catalog, Transform content, uint fallbackClickSound, SwitchLabels? switchLabels)
     {
-        if (catalog.Toggle is ToggleStyle toggleStyle)
+        if (catalog.Switch is SwitchStyle switchStyle)
         {
-            var transform = ToggleElementBuilder.Build(name, catalog.Row, toggleStyle, content);
-            return new ToggleRow(transform, ResolveClickSound(toggleStyle.ClickSoundEventId, fallbackClickSound));
+            var effectiveStyle = switchLabels is not null
+                ? switchStyle with { Option1Label = switchLabels.On, Option2Label = switchLabels.Off }
+                : switchStyle;
+            var transform = SwitchElementBuilder.Build(name, catalog.Row, effectiveStyle, content);
+            return new SwitchRow(transform, ResolveClickSound(switchStyle.ClickSoundEventId, fallbackClickSound));
         }
 
-        LogMissingStyle(RowType.Toggle, label, nameof(catalog.Toggle));
+        LogMissingStyle(RowType.Switch, label, nameof(catalog.Switch));
         return null;
     }
 
@@ -102,4 +106,3 @@ internal sealed class RowFactory
     }
 
 }
-

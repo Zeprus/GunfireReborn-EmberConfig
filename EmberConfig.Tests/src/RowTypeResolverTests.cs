@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using BepInEx.Configuration;
 using EmberConfig.Core;
+using EmberConfig.Public;
 using EmberConfig.UI;
 using UnityEngine;
 using Xunit;
@@ -13,10 +14,38 @@ public class RowTypeResolverTests
     private static ConfigFile NewConfig() => new(Path.Combine(Path.GetTempPath(), $"EmberConfigTests-{Guid.NewGuid()}.cfg"), true);
 
     [Fact]
-    public void Bool_ReturnsToggle()
+    public void Bool_ReturnsSwitch()
     {
         var entry = CreateEntry("key", true);
-        Assert.Equal(RowType.Toggle, RowTypeResolver.Resolve(entry));
+        Assert.Equal(RowType.Switch, RowTypeResolver.Resolve(entry));
+    }
+
+    [Fact]
+    public void SwitchStyle_ReturnsSwitch()
+    {
+        var entry = CreateEntry("key", true, controlStyle: SettingControlStyle.Switch);
+        Assert.Equal(RowType.Switch, RowTypeResolver.Resolve(entry));
+    }
+
+    [Fact]
+    public void BoolWithCarousel_FallbackToSwitch()
+    {
+        var entry = CreateEntry("key", true, controlStyle: SettingControlStyle.Carousel);
+        Assert.Equal(RowType.Switch, RowTypeResolver.Resolve(entry));
+    }
+
+    [Fact]
+    public void EnumWithSwitch_FallbackToDropdown()
+    {
+        var entry = CreateEntry("key", TestEnum.A, controlStyle: SettingControlStyle.Switch);
+        Assert.Equal(RowType.Dropdown, RowTypeResolver.Resolve(entry));
+    }
+
+    [Fact]
+    public void EnumWithCarousel_ReturnsDropdown()
+    {
+        var entry = CreateEntry("key", TestEnum.A, controlStyle: SettingControlStyle.Carousel);
+        Assert.Equal(RowType.Dropdown, RowTypeResolver.Resolve(entry));
     }
 
     [Fact]
@@ -92,12 +121,12 @@ public class RowTypeResolverTests
         Assert.Equal(RowType.Keybind, RowTypeResolver.Resolve(entry));
     }
 
-    private static ISettingEntry CreateEntry<T>(string key, T value, AcceptableValueBase? acceptable = null)
+    private static ISettingEntry CreateEntry<T>(string key, T value, AcceptableValueBase? acceptable = null, SettingControlStyle controlStyle = SettingControlStyle.Auto)
     {
         var config = NewConfig();
         var description = acceptable is not null ? new ConfigDescription("", acceptable) : null;
         var setting = config.Bind("test", key, value, description);
-        return new SettingEntry<T>(key, setting, "Label", new SettingLocation("Tab", "Group"));
+        return new SettingEntry<T>(key, setting, "Label", new SettingLocation("Tab", "Group"), null, controlStyle);
     }
 
     private enum TestEnum { A, B }

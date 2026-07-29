@@ -77,6 +77,7 @@ public static class ExampleConfiguration
         RegisterMaxParticlesSlider(config, behaviour);
         RegisterQualityDropdown(config, behaviour);
         RegisterRenderScaleDropdown(config, behaviour);
+        RegisterDifficultyCarousel(config, behaviour);
     }
 
     private static void RegisterCustomConfigEntryExamples(ConfigFile config, ExampleMonoBehaviour behaviour)
@@ -302,7 +303,7 @@ public static class ExampleConfiguration
     }
 
     /// <summary>
-    /// Example 11: A bool toggle on a custom tab.
+    /// Example 11: A bool toggle on a custom tab using the vanilla Switch style.
     /// The tab name "Example Mod: General" does not match a vanilla tab, so
     /// EmberConfig creates a new custom tab at the end of the settings tab bar.
     /// </summary>
@@ -317,7 +318,6 @@ public static class ExampleConfiguration
             Tab: "Example Mod: General",
             Group: "General",
             OnValueChanged: value => behaviour.SetOverlayVisible(value));
-
         SettingsMenu.Register(config, options);
     }
 
@@ -406,7 +406,28 @@ public static class ExampleConfiguration
     }
 
     /// <summary>
-    /// Example 16: A bool toggle with a sub-group on the custom
+    /// Example 16: An enum rendered as a carousel using MutiClickGroup style.
+    /// This uses the same Difficulty enum as the dropdown but requests the
+    /// <see cref="SettingControlStyle.Carousel"/> visual style.
+    /// </summary>
+    private static void RegisterDifficultyCarousel(ConfigFile config, ExampleMonoBehaviour behaviour)
+    {
+        var options = new SettingOptions<Difficulty>(
+            Section: "Example",
+            Key: "DifficultyCarousel",
+            DefaultValue: Difficulty.Normal,
+            Description: "Example difficulty selector rendered as a carousel.",
+            Label: "Difficulty Carousel",
+            Tab: "Example Mod: Gameplay",
+            Group: "Gameplay",
+            OnValueChanged: value => Plugin.Logger?.LogInfo($"Difficulty carousel changed to {value}."),
+            ControlStyle: SettingControlStyle.Carousel);
+
+        SettingsMenu.Register(config, options);
+    }
+
+    /// <summary>
+    /// Example 17: A bool toggle with a sub-group on the custom
     /// "Example Mod: Gameplay" tab. It is created from an existing ConfigEntry
     /// and controls the marker object.
     /// </summary>
@@ -423,7 +444,9 @@ public static class ExampleConfiguration
             Tab: "Example Mod: Gameplay",
             Group: "Gameplay",
             SubGroup: "UI",
-            OnValueChanged: value => behaviour.SetMarkerVisible(value));
+            OnValueChanged: value => behaviour.SetMarkerVisible(value),
+            ControlStyle: SettingControlStyle.Switch,
+            SwitchLabels: new SwitchLabels("Show", "Hide"));
 
         SettingsMenu.Register(configEntry, options);
     }

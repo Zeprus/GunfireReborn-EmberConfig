@@ -2,6 +2,7 @@ namespace EmberConfig.Core;
 
 using System;
 using BepInEx.Configuration;
+using EmberConfig.Public;
 using UnityEngine;
 
 public sealed class KeybindEntry : ISettingEntry, IKeybindEntry
@@ -19,6 +20,10 @@ public sealed class KeybindEntry : ISettingEntry, IKeybindEntry
 
     public int? SecondaryKeyCodeValue =>
         Secondary is { Value: not KeyCode.None } secondary ? (int)secondary.Value : null;
+
+    public SettingControlStyle ControlStyle { get; } = SettingControlStyle.Auto;
+
+    public SwitchLabels? SwitchLabels { get; } = null;
 
     ConfigEntryBase ISettingEntry.Config => Primary;
 
