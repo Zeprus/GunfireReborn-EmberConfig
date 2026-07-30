@@ -16,7 +16,7 @@ public sealed class SettingsRegistry
 
     public static bool IsInitialized => current is not null;
 
-    public event Action<ISettingEntry>? EntryRegistered;
+    public event Action? EntryRegistered;
 
     private readonly List<ISettingEntry> entries = new();
     private readonly Dictionary<string, List<ISettingEntry>> byTab = new(StringComparer.OrdinalIgnoreCase);
@@ -46,7 +46,7 @@ public sealed class SettingsRegistry
             byGroup[groupKey] = groupEntries;
         }
         groupEntries.Add(entry);
-        EntryRegistered?.Invoke(entry);
+        EntryRegistered?.Invoke();
     }
 
     public IEnumerable<ISettingEntry> GetAll() => entries;

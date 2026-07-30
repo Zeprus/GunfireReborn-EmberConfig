@@ -48,7 +48,7 @@ public class SettingsMenuManager : MonoBehaviour, UI.IKeybindRowServices
             tabManager = new TabManager(uiFinder);
             rowFactory = new RowFactory(uiFinder, this);
             injector = new SettingsInjector(registry, tabManager, rowFactory, uiFinder);
-            inputDispatcher = new InputDispatcher(() => registry.GetKeybindEntries());
+            inputDispatcher = new InputDispatcher(registry.GetKeybindEntries);
 
             panelTracker.Opened += OnPanelOpened;
             panelTracker.Closed += OnPanelClosed;
@@ -203,7 +203,7 @@ public class SettingsMenuManager : MonoBehaviour, UI.IKeybindRowServices
         panelTracker?.Reset();
     }
 
-    private void OnEntryRegistered(ISettingEntry entry)
+    private void OnEntryRegistered()
     {
         RequestRebuild();
     }
