@@ -14,6 +14,14 @@ internal static class SliderStyleCapture
             return null;
 
         var sliderPcUnitRect = RectData.From(sliderPcUnit.GetComponent<RectTransform>());
+        var hlg = sliderPcUnit.GetComponent<HorizontalLayoutGroup>();
+        var spacing = hlg?.spacing ?? 0f;
+        var childAlignment = hlg?.childAlignment ?? TextAnchor.MiddleLeft;
+        var paddingLeft = hlg?.padding.left ?? 20;
+        var childControlWidth = hlg?.childControlWidth ?? false;
+        var childControlHeight = hlg?.childControlHeight ?? false;
+        var childForceExpandWidth = hlg?.childForceExpandWidth ?? true;
+        var childForceExpandHeight = hlg?.childForceExpandHeight ?? true;
 
         var slider = FindChild(sliderPcUnit, "Slider");
         if (slider is null)
@@ -93,7 +101,14 @@ internal static class SliderStyleCapture
             handleSlideAreaRect,
             handleRectData,
             numRect,
-            numTextAppearance)
+            numTextAppearance,
+            spacing,
+            childAlignment,
+            paddingLeft,
+            childControlWidth,
+            childControlHeight,
+            childForceExpandWidth,
+            childForceExpandHeight)
         {
             ClickSoundEventId = WwiseAudio.GetEventId(slider),
         };

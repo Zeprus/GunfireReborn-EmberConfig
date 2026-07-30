@@ -35,8 +35,11 @@ internal sealed class GroupBuilder
     /// <param name="content">The tab content panel.</param>
     /// <param name="group">The group name.</param>
     /// <returns>The group container transform.</returns>
-    public Transform GetOrCreateGroupContainer(Transform content, string group)
+    public Transform GetOrCreateGroupContainer(Transform content, string? group)
     {
+        if (string.IsNullOrWhiteSpace(group))
+            return content;
+
         var key = GetGroupContainerKey(content, group);
         if (groupContainers.TryGetValue(key, out var existing))
             return existing;

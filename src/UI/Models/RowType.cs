@@ -6,5 +6,6 @@ internal enum RowType
     Slider,
     Switch,
     Dropdown,
+    Carousel,
     InputField,
 }

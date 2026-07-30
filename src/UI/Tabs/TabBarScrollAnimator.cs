@@ -53,7 +53,8 @@ internal sealed class TabBarScrollAnimator
             return;
 
         float leftPadding = content.GetComponent<HorizontalLayoutGroup>()?.padding.left ?? 0f;
-        float targetLeftEdge = Mathf.Max(0f, activeLeft - leftPadding);
+        float activeCenter = activeLeft + activeRect.rect.width * 0.5f;
+        float targetLeftEdge = Mathf.Max(0f, activeCenter - viewportWidth * 0.5f - leftPadding);
         targetNormalized = TabBarLayout.ComputeHorizontalNormalizedPosition(viewportWidth, contentWidth, targetLeftEdge);
 
         if (lastActiveIndex < 0 || Math.Abs(index - lastActiveIndex) > 1)

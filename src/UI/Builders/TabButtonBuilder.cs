@@ -66,6 +66,10 @@ internal static class TabButtonBuilder
         RowElementBuilder.SetRect(typeNameObj, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         var typeNameText = RowElementBuilder.AddText(typeNameObj, tabStyle.Unselected, label);
         typeNameText.raycastTarget = false;
+        typeNameText.enableAutoSizing = true;
+        typeNameText.overflowMode = TextOverflowModes.Ellipsis;
+        typeNameText.fontSizeMin = 10f;
+        typeNameText.fontSizeMax = tabStyle.Unselected.FontSize > 0f ? tabStyle.Unselected.FontSize : 30f;
 
         backgroundObj.SetActive(false);
 

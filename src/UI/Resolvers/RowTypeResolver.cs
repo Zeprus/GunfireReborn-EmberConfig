@@ -18,8 +18,11 @@ internal static class RowTypeResolver
         if (controlStyle == SettingControlStyle.Switch)
             return RowType.Switch;
 
-        if (controlStyle == SettingControlStyle.Dropdown || controlStyle == SettingControlStyle.Carousel)
+        if (controlStyle == SettingControlStyle.Dropdown)
             return RowType.Dropdown;
+
+        if (controlStyle == SettingControlStyle.Carousel)
+            return RowType.Carousel;
 
         var type = entry.Config.SettingType;
         if (type == typeof(bool))

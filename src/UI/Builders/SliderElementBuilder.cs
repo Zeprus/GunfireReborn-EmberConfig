@@ -16,12 +16,13 @@ internal static class SliderElementBuilder
         var sliderPcUnit = RowElementBuilder.CreateObject("Slider_PCunit", item.transform);
         sliderStyle.SliderPcUnitRect.Apply(sliderPcUnit.GetComponent<RectTransform>());
         var hlg = sliderPcUnit.AddComponent<HorizontalLayoutGroup>();
-        hlg.spacing = 0f;
-        hlg.childForceExpandWidth = true;
-        hlg.childForceExpandHeight = true;
-        hlg.childControlWidth = false;
-        hlg.childControlHeight = false;
-        hlg.childAlignment = TextAnchor.MiddleLeft;
+        hlg.spacing = sliderStyle.Spacing;
+        hlg.childForceExpandWidth = sliderStyle.ChildForceExpandWidth;
+        hlg.childForceExpandHeight = sliderStyle.ChildForceExpandHeight;
+        hlg.childControlWidth = sliderStyle.ChildControlWidth;
+        hlg.childControlHeight = sliderStyle.ChildControlHeight;
+        hlg.childAlignment = sliderStyle.ChildAlignment;
+        hlg.padding = new RectOffset(sliderStyle.PaddingLeft, 0, 0, 0);
 
         var sliderObj = RowElementBuilder.CreateObject("Slider", sliderPcUnit.transform);
         sliderObj.SetActive(false);

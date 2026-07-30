@@ -7,11 +7,11 @@ using UnityEngine.UI;
 
 internal static class DropdownStyleCapture
 {
-    internal static DropdownStyle? Capture(Transform panelRoot, Sprite? fallbackSprite, TextAppearance fallbackText)
+    internal static DropdownStyle Capture(Transform panelRoot, Sprite? fallbackSprite, TextAppearance fallbackText)
     {
         var dropdown = FindDropdownTransform(panelRoot);
         if (dropdown is null)
-            return null;
+            return DropdownStyle.Default(fallbackSprite, fallbackText);
 
         var itemFallback = DropdownItemStyle.Default(fallbackSprite, fallbackText);
         var templateFallback = DropdownTemplateStyle.Default(fallbackSprite, fallbackText);

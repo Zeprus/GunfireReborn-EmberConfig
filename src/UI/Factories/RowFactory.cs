@@ -35,6 +35,7 @@ internal sealed class RowFactory
             RowType.Slider => BuildSliderRow(name, entry.Label, catalog, content, fallbackClickSound),
             RowType.Switch => BuildSwitchRow(name, entry.Label, catalog, content, fallbackClickSound, entry.SwitchLabels),
             RowType.Dropdown => BuildDropdownRow(name, entry.Label, catalog, content, fallbackClickSound),
+            RowType.Carousel => BuildCarouselRow(name, entry.Label, catalog, content, fallbackClickSound),
             RowType.InputField or _ => BuildInputField(name, catalog, content, fallbackClickSound)
         };
     }
@@ -90,6 +91,18 @@ internal sealed class RowFactory
         }
 
         LogMissingStyle(RowType.Dropdown, label, nameof(catalog.Dropdown));
+        return null;
+    }
+
+    private static ISettingRow? BuildCarouselRow(string name, string label, StyleCatalog catalog, Transform content, uint fallbackClickSound)
+    {
+        if (catalog.Carousel is CarouselStyle carouselStyle)
+        {
+            var transform = CarouselElementBuilder.Build(name, catalog.Row, carouselStyle, content);
+            return new CarouselRow(transform, carouselStyle, ResolveClickSound(carouselStyle.ClickSoundEventId, fallbackClickSound));
+        }
+
+        LogMissingStyle(RowType.Carousel, label, nameof(catalog.Carousel));
         return null;
     }
 

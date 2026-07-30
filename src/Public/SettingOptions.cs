@@ -15,7 +15,7 @@ public sealed record SettingOptions<T>(
     string Description,
     string Label,
     string Tab,
-    string Group,
+    string? Group,
     string? SubGroup = null,
     Action<T>? OnValueChanged = null,
     AcceptableValueBase? AcceptableValues = null,

@@ -23,7 +23,14 @@ internal readonly record struct SliderStyle(
     RectData HandleSlideAreaRect,
     RectData HandleRect,
     RectData NumRect,
-    TextAppearance NumTextAppearance)
+    TextAppearance NumTextAppearance,
+    float Spacing,
+    TextAnchor ChildAlignment,
+    int PaddingLeft,
+    bool ChildControlWidth,
+    bool ChildControlHeight,
+    bool ChildForceExpandWidth,
+    bool ChildForceExpandHeight)
 {
     public uint ClickSoundEventId { get; init; }
 

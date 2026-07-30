@@ -66,7 +66,7 @@ public sealed class SettingsRegistry
 
     public IEnumerable<string> GetTabs() => byTab.Keys;
 
-    private static string Normalize(string value) => value?.Trim() ?? string.Empty;
+    private static string Normalize(string? value) => value?.Trim() ?? string.Empty;
 
     private sealed class GroupKeyComparer : IEqualityComparer<(string Tab, string Group)>
     {

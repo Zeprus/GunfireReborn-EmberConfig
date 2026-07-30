@@ -14,7 +14,7 @@ public sealed record KeybindOptions(
     string Description,
     string Label,
     string Tab,
-    string Group,
+    string? Group,
     string? SubGroup = null,
     KeyCode? DefaultSecondary = null,
     Action? OnPressed = null,

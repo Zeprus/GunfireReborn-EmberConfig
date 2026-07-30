@@ -101,11 +101,20 @@ internal sealed class SettingsInjector
 
     private void BuildTab(IEnumerable<ISettingEntry> entries, Transform content)
     {
+        var list = entries.ToList();
+        var ordered = list
+            .Select((entry, index) => (entry, index))
+            .OrderBy(x => x.entry.Location.Group ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(x => x.entry.Location.Group is null ? string.Empty : (x.entry.Location.SubGroup ?? string.Empty), StringComparer.OrdinalIgnoreCase)
+            .ThenBy(x => x.index)
+            .Select(x => x.entry)
+            .ToList();
+
         string? currentGroup = null;
         string? currentSubGroup = null;
         Transform? groupContainer = null;
 
-        foreach (var entry in entries)
+        foreach (var entry in ordered)
         {
             var loc = entry.Location;
 
@@ -118,7 +127,7 @@ internal sealed class SettingsInjector
 
             if (!string.Equals(currentSubGroup, loc.SubGroup, StringComparison.OrdinalIgnoreCase))
             {
-                if (loc.SubGroup is not null)
+                if (loc.SubGroup is not null && !string.IsNullOrWhiteSpace(loc.Group))
                     groupBuilder.EnsureSubGroupHeader(groupContainer ?? content, loc.Group, loc.SubGroup);
 
                 currentSubGroup = loc.SubGroup;

@@ -42,10 +42,10 @@ public class RowTypeResolverTests
     }
 
     [Fact]
-    public void EnumWithCarousel_ReturnsDropdown()
+    public void EnumWithCarousel_ReturnsCarousel()
     {
         var entry = CreateEntry("key", TestEnum.A, controlStyle: SettingControlStyle.Carousel);
-        Assert.Equal(RowType.Dropdown, RowTypeResolver.Resolve(entry));
+        Assert.Equal(RowType.Carousel, RowTypeResolver.Resolve(entry));
     }
 
     [Fact]

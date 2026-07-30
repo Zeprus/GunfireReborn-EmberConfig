@@ -114,13 +114,11 @@ public static class SettingsMenu
         return new KeybindRegistration(primary, secondary);
     }
 
-    private static SettingLocation CreateLocation(string tab, string group, string? subGroup)
+    private static SettingLocation CreateLocation(string tab, string? group, string? subGroup)
     {
         if (string.IsNullOrWhiteSpace(tab))
             throw new ArgumentException("Tab cannot be empty.", nameof(tab));
-        if (string.IsNullOrWhiteSpace(group))
-            throw new ArgumentException("Group cannot be empty.", nameof(group));
 
-        return new SettingLocation(tab.Trim(), group.Trim(), string.IsNullOrWhiteSpace(subGroup) ? null : subGroup.Trim());
+        return new SettingLocation(tab.Trim(), string.IsNullOrWhiteSpace(group) ? null : group.Trim(), string.IsNullOrWhiteSpace(subGroup) ? null : subGroup.Trim());
     }
 }

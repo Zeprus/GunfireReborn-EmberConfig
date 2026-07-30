@@ -11,6 +11,7 @@ internal sealed class StyleCatalog
     public SliderStyle? Slider { get; }
     public SwitchStyle? Switch { get; }
     public DropdownStyle? Dropdown { get; }
+    public CarouselStyle? Carousel { get; }
     public InputStyle? Input { get; }
 
     private StyleCatalog(
@@ -21,6 +22,7 @@ internal sealed class StyleCatalog
         SliderStyle? slider,
         SwitchStyle? @switch,
         DropdownStyle? dropdown,
+        CarouselStyle? carousel,
         InputStyle? input)
     {
         Row = row;
@@ -30,6 +32,7 @@ internal sealed class StyleCatalog
         Slider = slider;
         Switch = @switch;
         Dropdown = dropdown;
+        Carousel = carousel;
         Input = input;
     }
 
@@ -49,6 +52,7 @@ internal sealed class StyleCatalog
             SliderStyleCapture.Capture(panelRoot, rowStyle.BackgroundSprite, rowStyle.Title),
             SwitchStyleCapture.Capture(panelRoot, rowStyle.BackgroundSprite, rowStyle.Title),
             DropdownStyleCapture.Capture(panelRoot, rowStyle.BackgroundSprite, rowStyle.Title),
+            CarouselStyleCapture.Capture(panelRoot, rowStyle.BackgroundSprite, rowStyle.Title) ?? CarouselStyle.Default(rowStyle.BackgroundSprite, rowStyle.Title),
             InputStyleCapture.Capture(panelRoot, rowStyle.BackgroundSprite, rowStyle.Title));
     }
 }

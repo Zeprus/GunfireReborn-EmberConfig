@@ -17,10 +17,10 @@ internal static class SwitchElementBuilder
         var hlg = clickGroupObj.AddComponent<HorizontalLayoutGroup>();
         hlg.spacing = switchStyle.Spacing;
         hlg.childAlignment = switchStyle.ChildAlignment;
-        hlg.childForceExpandWidth = false;
-        hlg.childForceExpandHeight = false;
-        hlg.childControlWidth = false;
-        hlg.childControlHeight = false;
+        hlg.childForceExpandWidth = switchStyle.ChildForceExpandWidth;
+        hlg.childForceExpandHeight = switchStyle.ChildForceExpandHeight;
+        hlg.childControlWidth = switchStyle.ChildControlWidth;
+        hlg.childControlHeight = switchStyle.ChildControlHeight;
 
         var toggleGroup = clickGroupObj.AddComponent<M1ToggleGroup>();
         toggleGroup.allowSwitchOff = false;
