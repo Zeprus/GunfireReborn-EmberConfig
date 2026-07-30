@@ -73,7 +73,8 @@ internal sealed class GroupBuilder
         go.AddComponent<CanvasRenderer>();
         var text = go.AddComponent<TextMeshProUGUI>();
         text.font = groupStyle.Header.Font;
-        text.fontMaterial = groupStyle.Header.FontMaterial;
+        if (groupStyle.Header.Font is not null && groupStyle.Header.FontMaterial == groupStyle.Header.Font.material)
+            text.fontMaterial = groupStyle.Header.FontMaterial;
         text.color = groupStyle.Header.Color;
         text.alignment = TextAlignmentOptions.Left;
         text.text = $"    {subGroup}";

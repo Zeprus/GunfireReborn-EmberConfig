@@ -109,7 +109,8 @@ internal static class RowElementBuilder
         var tmp = go.AddComponent<TextMeshProUGUI>();
 
         tmp.font = appearance.Font;
-        tmp.fontSharedMaterial = appearance.FontMaterial;
+        if (appearance.Font is not null && appearance.FontMaterial == appearance.Font.material)
+            tmp.fontSharedMaterial = appearance.FontMaterial;
         tmp.text = text;
         tmp.alignment = alignment ?? appearance.Alignment;
         tmp.fontStyle = appearance.FontStyle;

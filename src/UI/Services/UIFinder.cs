@@ -41,7 +41,7 @@ public sealed class UIFinder
             }
         }
 
-        Style = StyleCatalog.Create(panelRoot);
+        Style = StyleFactoryController.Create(panelRoot);
         IsReady = Style is not null && viewport is not null && tabSwitch is not null;
     }
 

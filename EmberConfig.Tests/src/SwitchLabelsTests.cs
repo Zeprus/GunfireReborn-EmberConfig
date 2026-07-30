@@ -53,6 +53,8 @@ public class SwitchLabelsTests
             default,
             default,
             default,
+            default,
+            default,
             default)
         {
             Option1Label = "On",

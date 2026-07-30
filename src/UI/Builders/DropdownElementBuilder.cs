@@ -1,5 +1,6 @@
 namespace EmberConfig.UI;
 
+using DYControl;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,7 +19,7 @@ internal static class DropdownElementBuilder
         var rowItem = RowElementBuilder.CreateItem(style, root);
         var dropdownObj = RowElementBuilder.CreateObject("Dropdown", rowItem.transform);
         dropdownObj.SetActive(false);
-        RowElementBuilder.SetRect(dropdownObj, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        item.ItemRect.Apply(dropdownObj.GetComponent<RectTransform>());
         var image = RowElementBuilder.AddImage(dropdownObj, item.ItemSprite, item.ItemType, item.ItemColor);
 
         var labelObj = RowElementBuilder.CreateObject("Label", dropdownObj.transform);
@@ -40,9 +41,11 @@ internal static class DropdownElementBuilder
         scrollRect.vertical = true;
         scrollRect.movementType = ScrollRect.MovementType.Clamped;
 
+        var dyCtrlScrollRect = templateObj.AddComponent<DYCtrlDropDownScrollRect>();
+
         var viewportObj = RowElementBuilder.CreateObject("Viewport", templateObj.transform);
         template.ViewportRect.Apply(viewportObj.GetComponent<RectTransform>());
-        var viewportImage = RowElementBuilder.AddImage(viewportObj, null, Image.Type.Simple, Color.white);
+        var viewportImage = RowElementBuilder.AddImage(viewportObj, template.TemplateSprite, template.TemplateImageType, Color.white);
         var viewportMask = viewportObj.AddComponent<Mask>();
         viewportMask.showMaskGraphic = false;
         scrollRect.viewport = viewportObj.GetComponent<RectTransform>();
@@ -59,11 +62,12 @@ internal static class DropdownElementBuilder
         var templateHighlightObj = RowElementBuilder.CreateObject("Image", templateItemObj.transform);
         template.TemplateHighlightRect.Apply(templateHighlightObj.GetComponent<RectTransform>());
         var templateHighlightImage = RowElementBuilder.AddImage(templateHighlightObj, template.TemplateHighlightSprite, template.TemplateHighlightType, template.TemplateHighlightColor);
-        templateItemToggle.targetGraphic = templateHighlightImage;
 
         var itemBgObj = RowElementBuilder.CreateObject("Item Background", templateItemObj.transform);
         template.ItemBackgroundRect.Apply(itemBgObj.GetComponent<RectTransform>());
-        RowElementBuilder.AddImage(itemBgObj, template.ItemBgSprite, template.ItemBgType, template.ItemBgColor);
+        var itemBgImage = RowElementBuilder.AddImage(itemBgObj, template.ItemBgSprite, template.ItemBgType, template.ItemBgColor);
+        templateItemToggle.targetGraphic = itemBgImage;
+        templateItemToggle.colors = template.ItemColorBlock;
 
         var itemCheckObj = RowElementBuilder.CreateObject("Item Checkmark", templateItemObj.transform);
         template.ItemCheckmarkRect.Apply(itemCheckObj.GetComponent<RectTransform>());
@@ -98,12 +102,39 @@ internal static class DropdownElementBuilder
         dropdown.captionText = labelText;
         dropdown.template = templateObj.GetComponent<RectTransform>();
         dropdown.itemText = itemLabelText;
+        dropdown.itemImage = templateHighlightImage;
         dropdown.interactable = true;
 
-        dropdownObj.SetActive(true);
+        var controllerLink = dropdownObj.AddComponent<ControllerLinkToggle>();
+        controllerLink.LinkedDropDown = dropdown;
+        controllerLink.buttontext = labelText;
+        if (item.ControllerKey != 0)
+            controllerLink.ControllerKey = (ControllerConstKey)item.ControllerKey;
+
+        dyCtrlScrollRect.dropdown = dropdown;
+        dyCtrlScrollRect.srviewport = viewportObj.GetComponent<RectTransform>();
+        dyCtrlScrollRect.srcontent = contentObj.GetComponent<RectTransform>();
+        dyCtrlScrollRect.ctrlBackKey = (ControllerConstKey)template.CtrlBackKey;
+
+        var listItemDySelect = templateItemObj.AddComponent<DYSelect>();
+        listItemDySelect.unitySel = templateItemToggle;
+        listItemDySelect.isCurBtn = true;
+        listItemDySelect.defaultCanSelect = false;
+        listItemDySelect.selectExcuteClick = false;
+        listItemDySelect.curObj = dyCtrlScrollRect.gameObject;
 
         VanillaComponentApplier.ApplyToRow(root.transform, dropdown);
-        VanillaComponentApplier.AttachAudio(dropdownObj.transform, false);
+        var rootDySelect = root.GetComponent<DYSelect>();
+        if (rootDySelect is not null)
+        {
+            dyCtrlScrollRect.backSel = rootDySelect;
+            rootDySelect.isCurBtn = true;
+        }
+
+        VanillaComponentApplier.AttachAudio(dropdownObj.transform, true);
+        VanillaComponentApplier.AttachAudio(templateItemObj.transform, true);
+
+        dropdownObj.SetActive(true);
 
         return root.transform;
     }

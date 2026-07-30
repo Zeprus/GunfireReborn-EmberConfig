@@ -93,5 +93,8 @@ internal class DropdownRow : SettingRowBase
         Entry.Config.BoxedValue = options[index];
     }
 
-
+    protected override void OnUnbind()
+    {
+        dropdown?.Hide();
+    }
 }

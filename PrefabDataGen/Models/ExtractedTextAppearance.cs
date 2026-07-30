@@ -12,4 +12,8 @@ internal sealed record ExtractedTextAppearance(
     bool EnableAutoSizing,
     int OverflowMode,
     float FontSizeMin,
-    float FontSizeMax);
+    float FontSizeMax)
+{
+    public static ExtractedTextAppearance Default() =>
+        new(null, null, 20f, new Color(1f, 1f, 1f, 1f), 1, 0, 0f, false, false, 0, 0f, 0f);
+}

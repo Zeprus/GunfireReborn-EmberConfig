@@ -7,17 +7,15 @@ using UnityEngine;
 
 internal static class MaterialResolver
 {
-    private static readonly Dictionary<string, Material> Cache = new();
+    private static readonly Dictionary<string, Material?> Cache = new();
     private static Material[]? loadedMaterials;
-    private static Material? anyMaterial;
 
-    internal static Material Resolve(string? name)
+    internal static Material? Resolve(string? name)
     {
         if (Cache.TryGetValue(name ?? string.Empty, out var cached))
             return cached;
 
         loadedMaterials ??= UnityEngine.Resources.FindObjectsOfTypeAll<Material>();
-        anyMaterial ??= loadedMaterials.FirstOrDefault();
 
         if (!string.IsNullOrEmpty(name))
         {
@@ -29,12 +27,7 @@ internal static class MaterialResolver
             }
         }
 
-        if (anyMaterial is not null)
-        {
-            Cache[name ?? string.Empty] = anyMaterial;
-            return anyMaterial;
-        }
-
-        throw new InvalidOperationException("No Material found in loaded resources.");
+        Cache[name ?? string.Empty] = null;
+        return null;
     }
 }

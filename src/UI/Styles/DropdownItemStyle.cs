@@ -18,7 +18,8 @@ internal readonly record struct DropdownItemStyle(
     RectData ArrowRect,
     Sprite? ArrowSprite,
     Color ArrowColor,
-    Image.Type ArrowType)
+    Image.Type ArrowType,
+    int ControllerKey = 0)
 {
     internal static DropdownItemStyle Default(Sprite? fallbackSprite, TextAppearance fallbackText) =>
         new(
