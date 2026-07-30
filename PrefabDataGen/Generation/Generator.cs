@@ -24,6 +24,7 @@ internal sealed class Generator
         var dropdownPrefabPath = Path.Combine(paths.ExportedProjectAssetsPath, "res", "uisteam", "panel_prefabs", "setting", "SettingDropdown_PCunit.prefab");
         var switchPrefabPath = Path.Combine(paths.ExportedProjectAssetsPath, "res", "uisteam", "panel_prefabs", "setting", "SettingClickGroup_PCunit.prefab");
         var sliderPrefabPath = Path.Combine(paths.ExportedProjectAssetsPath, "res", "uisteam", "panel_prefabs", "setting", "SettingSlider_PCunit.prefab");
+        var keybindPrefabPath = Path.Combine(paths.ExportedProjectAssetsPath, "res", "uisteam", "panel_prefabs", "setting", "SettingKeyChange_PCunit.prefab");
 
         if (!File.Exists(panelPrefabPath))
             throw new FileNotFoundException($"Panel prefab not found: {panelPrefabPath}");
@@ -85,6 +86,22 @@ internal sealed class Generator
         if (slider is null)
             throw new InvalidOperationException("Slider style could not be extracted.");
 
+        KeybindButtonRawStyle? keybind = null;
+        if (File.Exists(keybindPrefabPath))
+        {
+            Console.WriteLine($"Loading keybind prefab: {keybindPrefabPath}");
+            var keybindDocument = UnityPrefabLoader.Load(keybindPrefabPath);
+            Console.WriteLine($"  -> {keybindDocument.GameObjects.Count} GameObjects, {keybindDocument.Components.Count} components");
+            keybind = KeybindButtonStyleExtractor.Extract(keybindDocument, assetNameResolver);
+        }
+        else
+        {
+            Console.WriteLine($"Keybind prefab not found: {keybindPrefabPath}");
+        }
+
+        if (keybind is null)
+            throw new InvalidOperationException("Keybind button style could not be extracted.");
+
         var legacyFactoryPath = Path.Combine(outputDir, "PrefabStyleFactory.cs");
         if (File.Exists(legacyFactoryPath))
             File.Delete(legacyFactoryPath);
@@ -93,13 +110,16 @@ internal sealed class Generator
         var dropdownFactoryPath = Path.Combine(outputDir, "DropdownStyleFactory.cs");
         var switchFactoryPath = Path.Combine(outputDir, "SwitchStyleFactory.cs");
         var sliderFactoryPath = Path.Combine(outputDir, "SliderStyleFactory.cs");
+        var keybindFactoryPath = Path.Combine(outputDir, "KeybindButtonStyleFactory.cs");
         CSharpFileWriter.WriteRowStyleFactory(rowFactoryPath, row);
         CSharpFileWriter.WriteDropdownStyleFactory(dropdownFactoryPath, dropdown);
         CSharpFileWriter.WriteSwitchStyleFactory(switchFactoryPath, switchStyle);
         CSharpFileWriter.WriteSliderStyleFactory(sliderFactoryPath, slider);
+        CSharpFileWriter.WriteKeybindButtonStyleFactory(keybindFactoryPath, keybind);
         Console.WriteLine($"Wrote {rowFactoryPath}");
         Console.WriteLine($"Wrote {dropdownFactoryPath}");
         Console.WriteLine($"Wrote {switchFactoryPath}");
         Console.WriteLine($"Wrote {sliderFactoryPath}");
+        Console.WriteLine($"Wrote {keybindFactoryPath}");
     }
 }

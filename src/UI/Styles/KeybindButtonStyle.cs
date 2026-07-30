@@ -4,6 +4,18 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+internal readonly record struct KeybindItemLayout(
+    float Spacing,
+    TextAnchor ChildAlignment,
+    int PaddingLeft,
+    int PaddingRight,
+    int PaddingTop,
+    int PaddingBottom,
+    bool ChildControlWidth,
+    bool ChildControlHeight,
+    bool ChildForceExpandWidth,
+    bool ChildForceExpandHeight);
+
 internal readonly record struct KeybindButtonStyle(
     TextAppearance Text,
     TextAppearance NoneText,
@@ -12,9 +24,11 @@ internal readonly record struct KeybindButtonStyle(
     Sprite? BackgroundSprite,
     Image.Type BackgroundType,
     ColorBlock ButtonColors,
+    Selectable.Transition ButtonTransition,
     RectData PrimaryRect,
     RectData SecondaryRect,
-    RectData ItemRect)
+    RectData ItemRect,
+    KeybindItemLayout ItemLayout)
 {
     public uint ClickSoundEventId { get; init; }
 

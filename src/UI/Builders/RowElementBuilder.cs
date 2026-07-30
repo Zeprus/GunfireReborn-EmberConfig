@@ -1,5 +1,6 @@
 namespace EmberConfig.UI;
 
+using DYControl;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -73,11 +74,15 @@ internal static class RowElementBuilder
 
         var button = go.AddComponent<M1Button>();
         button.targetGraphic = image;
-        button.transition = Selectable.Transition.ColorTint;
+        button.transition = style.ButtonTransition;
         button.colors = style.ButtonColors;
         button.interactable = true;
 
         VanillaComponentApplier.ApplyToControl(go.transform, addDySelect: true, addAudio: true);
+
+        var dySelect = go.GetComponent<DYSelect>();
+        if (dySelect is not null)
+            dySelect.isCurBtn = true;
 
         return go;
     }
