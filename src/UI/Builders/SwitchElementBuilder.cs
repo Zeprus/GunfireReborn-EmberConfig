@@ -15,23 +15,27 @@ internal static class SwitchElementBuilder
         switchStyle.ClickGroupRect.Apply(clickGroupObj.GetComponent<RectTransform>());
 
         var hlg = clickGroupObj.AddComponent<HorizontalLayoutGroup>();
-        hlg.spacing = switchStyle.Spacing;
-        hlg.childAlignment = switchStyle.ChildAlignment;
-        hlg.childForceExpandWidth = switchStyle.ChildForceExpandWidth;
-        hlg.childForceExpandHeight = switchStyle.ChildForceExpandHeight;
-        hlg.childControlWidth = switchStyle.ChildControlWidth;
-        hlg.childControlHeight = switchStyle.ChildControlHeight;
+        hlg.spacing = switchStyle.ClickGroupLayout.Spacing;
+        hlg.childAlignment = switchStyle.ClickGroupLayout.ChildAlignment;
+        hlg.childForceExpandWidth = switchStyle.ClickGroupLayout.ChildForceExpandWidth;
+        hlg.childForceExpandHeight = switchStyle.ClickGroupLayout.ChildForceExpandHeight;
+        hlg.childControlWidth = switchStyle.ClickGroupLayout.ChildControlWidth;
+        hlg.childControlHeight = switchStyle.ClickGroupLayout.ChildControlHeight;
+        hlg.padding = new RectOffset(
+            switchStyle.ClickGroupLayout.PaddingLeft,
+            switchStyle.ClickGroupLayout.PaddingRight,
+            switchStyle.ClickGroupLayout.PaddingTop,
+            switchStyle.ClickGroupLayout.PaddingBottom);
 
         var toggleGroup = clickGroupObj.AddComponent<M1ToggleGroup>();
-        toggleGroup.allowSwitchOff = false;
+        toggleGroup.allowSwitchOff = switchStyle.AllowSwitchOff;
 
         var first = BuildOption(switchStyle, clickGroupObj.transform, toggleGroup, switchStyle.Option1Label, 1);
         var second = BuildOption(switchStyle, clickGroupObj.transform, toggleGroup, switchStyle.Option2Label, 2);
 
-        // Use the first option as the row's selectable for controller navigation.
         VanillaComponentApplier.ApplyToRow(root.transform, first);
-        VanillaComponentApplier.AttachAudio(first.transform);
-        VanillaComponentApplier.AttachAudio(second.transform, false);
+        VanillaComponentApplier.ApplyToControl(first.transform, addDySelect: true, addAudio: true);
+        VanillaComponentApplier.ApplyToControl(second.transform, addDySelect: true, addAudio: false);
 
         return root.transform;
     }
@@ -39,37 +43,34 @@ internal static class SwitchElementBuilder
     private static M1Toggle BuildOption(SwitchStyle style, Transform clickGroup, M1ToggleGroup group, string label, int index)
     {
         var optionObj = RowElementBuilder.CreateObject(index.ToString(), clickGroup);
-        var optionRect = optionObj.GetComponent<RectTransform>();
-        optionRect.sizeDelta = style.OptionSize;
-        optionRect.pivot = new Vector2(0.5f, 0.5f);
-        optionRect.anchorMin = new Vector2(0.5f, 0.5f);
-        optionRect.anchorMax = new Vector2(0.5f, 0.5f);
-        optionRect.anchoredPosition = Vector2.zero;
+        style.OptionRect.Apply(optionObj.GetComponent<RectTransform>());
 
         var layoutEl = optionObj.AddComponent<LayoutElement>();
-        layoutEl.minWidth = style.OptionSize.x;
-        layoutEl.minHeight = style.OptionSize.y;
-        layoutEl.preferredWidth = style.OptionSize.x;
-        layoutEl.preferredHeight = style.OptionSize.y;
+        layoutEl.minWidth = style.OptionRect.SizeDelta.x;
+        layoutEl.minHeight = style.OptionRect.SizeDelta.y;
+        layoutEl.preferredWidth = style.OptionRect.SizeDelta.x;
+        layoutEl.preferredHeight = style.OptionRect.SizeDelta.y;
 
         var toggle = optionObj.AddComponent<M1Toggle>();
         toggle.onValueChanged ??= new M1Toggle.ToggleEvent();
         toggle.group = group;
         toggle.interactable = true;
+        toggle.transition = style.OptionTransition;
+        toggle.colors = style.OptionColorBlock;
 
         var bgObj = RowElementBuilder.CreateObject("Background", optionObj.transform);
-        RowElementBuilder.SetRect(bgObj, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        style.BackgroundRect.Apply(bgObj.GetComponent<RectTransform>());
         var bgImage = RowElementBuilder.AddImage(bgObj, style.OptionBackgroundSprite, style.OptionBackgroundType, style.OptionBackgroundColor);
         toggle.targetGraphic = bgImage;
 
         var checkObj = RowElementBuilder.CreateObject("Checkmark", bgObj.transform);
-        RowElementBuilder.SetRect(checkObj, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        style.CheckmarkRect.Apply(checkObj.GetComponent<RectTransform>());
         var checkImage = RowElementBuilder.AddImage(checkObj, style.OptionCheckmarkSprite, style.OptionCheckmarkType, style.OptionCheckmarkColor);
         toggle.graphic = checkImage;
         toggle.ungraphic = null;
 
         var labelObj = RowElementBuilder.CreateObject("Label", optionObj.transform);
-        RowElementBuilder.SetRect(labelObj, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        style.LabelRect.Apply(labelObj.GetComponent<RectTransform>());
         var labelText = RowElementBuilder.AddText(labelObj, style.LabelTextAppearance, label);
         labelText.raycastTarget = false;
 
