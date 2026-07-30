@@ -35,6 +35,7 @@ internal sealed class Generator
         Console.WriteLine($"  -> {document.GameObjects.Count} GameObjects, {document.Components.Count} components");
 
         var row = RowStyleExtractor.Extract(document, assetNameResolver);
+        var tab = TabStyleExtractor.Extract(document, assetNameResolver);
 
         DropdownRawStyle? dropdown = null;
         if (File.Exists(dropdownPrefabPath))
@@ -129,17 +130,22 @@ internal sealed class Generator
         var sliderFactoryPath = Path.Combine(outputDir, "SliderStyleFactory.cs");
         var keybindFactoryPath = Path.Combine(outputDir, "KeybindButtonStyleFactory.cs");
         var carouselFactoryPath = Path.Combine(outputDir, "CarouselStyleFactory.cs");
+        var inputFactoryPath = Path.Combine(outputDir, "InputStyleFactory.cs");
+        var tabFactoryPath = Path.Combine(outputDir, "TabStyleFactory.cs");
         CSharpFileWriter.WriteRowStyleFactory(rowFactoryPath, row);
         CSharpFileWriter.WriteDropdownStyleFactory(dropdownFactoryPath, dropdown);
         CSharpFileWriter.WriteSwitchStyleFactory(switchFactoryPath, switchStyle);
         CSharpFileWriter.WriteSliderStyleFactory(sliderFactoryPath, slider);
         CSharpFileWriter.WriteKeybindButtonStyleFactory(keybindFactoryPath, keybind);
         CSharpFileWriter.WriteCarouselStyleFactory(carouselFactoryPath, carousel);
+        CSharpFileWriter.WriteInputStyleFactory(inputFactoryPath);
+        CSharpFileWriter.WriteTabStyleFactory(tabFactoryPath, tab);
         Console.WriteLine($"Wrote {rowFactoryPath}");
         Console.WriteLine($"Wrote {dropdownFactoryPath}");
         Console.WriteLine($"Wrote {switchFactoryPath}");
         Console.WriteLine($"Wrote {sliderFactoryPath}");
         Console.WriteLine($"Wrote {keybindFactoryPath}");
         Console.WriteLine($"Wrote {carouselFactoryPath}");
+        Console.WriteLine($"Wrote {inputFactoryPath}");
     }
 }

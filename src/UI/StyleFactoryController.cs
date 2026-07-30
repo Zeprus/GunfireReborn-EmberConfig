@@ -20,21 +20,15 @@ internal static class StyleFactoryController
 
         return new StyleCatalog(
             rowStyle,
-            TabStyleFactory.Create(panelRoot, rowStyle.Title),
+            TabStyleFactory.Create(rowStyle.Title),
             GroupHeaderStyleFactory.Create(panelRoot, rowStyle.Title),
             KeybindButtonStyleFactory.Create(rowStyle.Title),
             SliderStyleFactory.Create(rowStyle.Title),
             SwitchStyleFactory.Create(rowStyle.Title),
             DropdownStyleFactory.Create(rowStyle.Title),
             CarouselStyleFactory.Create(rowStyle.Title),
-            InputStyleFactory.Create(panelRoot, rowStyle.BackgroundSprite, rowStyle.Title));
+            InputStyleFactory.Create(rowStyle.BackgroundSprite, rowStyle.Title));
     }
-}
-
-internal static class TabStyleFactory
-{
-    internal static TabStyle? Create(Transform panelRoot, TextAppearance fallback) =>
-        TabStyleCapture.Capture(panelRoot, fallback);
 }
 
 internal static class GroupHeaderStyleFactory
@@ -43,8 +37,4 @@ internal static class GroupHeaderStyleFactory
         GroupHeaderStyleCapture.Capture(panelRoot, fallback) ?? GroupHeaderStyle.Default(fallback);
 }
 
-internal static class InputStyleFactory
-{
-    internal static InputStyle? Create(Transform panelRoot, Sprite? fallbackSprite, TextAppearance fallbackText) =>
-        InputStyleCapture.Capture(panelRoot, fallbackSprite, fallbackText);
-}
+
