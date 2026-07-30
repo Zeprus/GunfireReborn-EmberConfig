@@ -23,7 +23,7 @@ internal static class StyleFactoryController
             TabStyleFactory.Create(panelRoot, rowStyle.Title),
             GroupHeaderStyleFactory.Create(panelRoot, rowStyle.Title),
             KeybindButtonStyleFactory.Create(panelRoot, rowStyle.Title, rowStyle.BackgroundSprite),
-            SliderStyleFactory.Create(panelRoot, rowStyle.BackgroundSprite, rowStyle.Title),
+            SliderStyleFactory.Create(rowStyle.Title),
             SwitchStyleFactory.Create(rowStyle.Title),
             DropdownStyleFactory.Create(rowStyle.Title),
             CarouselStyleFactory.Create(panelRoot, rowStyle.BackgroundSprite, rowStyle.Title),
@@ -47,12 +47,6 @@ internal static class KeybindButtonStyleFactory
 {
     internal static KeybindButtonStyle? Create(Transform panelRoot, TextAppearance fallback, Sprite? rowSprite) =>
         KeybindButtonStyleCapture.Capture(panelRoot, fallback, rowSprite);
-}
-
-internal static class SliderStyleFactory
-{
-    internal static SliderStyle? Create(Transform panelRoot, Sprite? fallbackSprite, TextAppearance fallbackText) =>
-        SliderStyleCapture.Capture(panelRoot, fallbackSprite, fallbackText);
 }
 
 internal static class CarouselStyleFactory

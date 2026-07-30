@@ -23,6 +23,7 @@ internal sealed class Generator
         var panelPrefabPath = Path.Combine(paths.ExportedProjectAssetsPath, "res", "uisteam", "panel_prefabs", "setting", "PC_Panel_setting.prefab");
         var dropdownPrefabPath = Path.Combine(paths.ExportedProjectAssetsPath, "res", "uisteam", "panel_prefabs", "setting", "SettingDropdown_PCunit.prefab");
         var switchPrefabPath = Path.Combine(paths.ExportedProjectAssetsPath, "res", "uisteam", "panel_prefabs", "setting", "SettingClickGroup_PCunit.prefab");
+        var sliderPrefabPath = Path.Combine(paths.ExportedProjectAssetsPath, "res", "uisteam", "panel_prefabs", "setting", "SettingSlider_PCunit.prefab");
 
         if (!File.Exists(panelPrefabPath))
             throw new FileNotFoundException($"Panel prefab not found: {panelPrefabPath}");
@@ -68,6 +69,22 @@ internal sealed class Generator
         if (switchStyle is null)
             throw new InvalidOperationException("Switch style could not be extracted.");
 
+        SliderRawStyle? slider = null;
+        if (File.Exists(sliderPrefabPath))
+        {
+            Console.WriteLine($"Loading slider prefab: {sliderPrefabPath}");
+            var sliderDocument = UnityPrefabLoader.Load(sliderPrefabPath);
+            Console.WriteLine($"  -> {sliderDocument.GameObjects.Count} GameObjects, {sliderDocument.Components.Count} components");
+            slider = SliderStyleExtractor.Extract(sliderDocument, assetNameResolver);
+        }
+        else
+        {
+            Console.WriteLine($"Slider prefab not found: {sliderPrefabPath}");
+        }
+
+        if (slider is null)
+            throw new InvalidOperationException("Slider style could not be extracted.");
+
         var legacyFactoryPath = Path.Combine(outputDir, "PrefabStyleFactory.cs");
         if (File.Exists(legacyFactoryPath))
             File.Delete(legacyFactoryPath);
@@ -75,11 +92,14 @@ internal sealed class Generator
         var rowFactoryPath = Path.Combine(outputDir, "RowStyleFactory.cs");
         var dropdownFactoryPath = Path.Combine(outputDir, "DropdownStyleFactory.cs");
         var switchFactoryPath = Path.Combine(outputDir, "SwitchStyleFactory.cs");
+        var sliderFactoryPath = Path.Combine(outputDir, "SliderStyleFactory.cs");
         CSharpFileWriter.WriteRowStyleFactory(rowFactoryPath, row);
         CSharpFileWriter.WriteDropdownStyleFactory(dropdownFactoryPath, dropdown);
         CSharpFileWriter.WriteSwitchStyleFactory(switchFactoryPath, switchStyle);
+        CSharpFileWriter.WriteSliderStyleFactory(sliderFactoryPath, slider);
         Console.WriteLine($"Wrote {rowFactoryPath}");
         Console.WriteLine($"Wrote {dropdownFactoryPath}");
         Console.WriteLine($"Wrote {switchFactoryPath}");
+        Console.WriteLine($"Wrote {sliderFactoryPath}");
     }
 }
