@@ -70,7 +70,9 @@ internal class CarouselRow : SettingRowBase
         for (int i = 0; i < count; i++)
         {
             var dot = CarouselElementBuilder.CreateDot(carouselStyle, i, dotGroup);
-            dots.Add(dot.GetComponent<Image>());
+            var dotImage = dot.transform.Find("Background")?.GetComponent<Image>()
+                ?? dot.GetComponentInChildren<Image>(true);
+            dots.Add(dotImage);
         }
     }
 
@@ -140,7 +142,7 @@ internal class CarouselRow : SettingRowBase
             if (dots[i] is null)
                 continue;
 
-            dots[i].color = i == currentIndex ? carouselStyle.SelectedDotColor : carouselStyle.UnselectedDotColor;
+            dots[i].color = i == currentIndex ? carouselStyle.DotCheckmarkColor : carouselStyle.DotBackgroundColor;
         }
     }
 

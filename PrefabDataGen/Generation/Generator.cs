@@ -25,6 +25,7 @@ internal sealed class Generator
         var switchPrefabPath = Path.Combine(paths.ExportedProjectAssetsPath, "res", "uisteam", "panel_prefabs", "setting", "SettingClickGroup_PCunit.prefab");
         var sliderPrefabPath = Path.Combine(paths.ExportedProjectAssetsPath, "res", "uisteam", "panel_prefabs", "setting", "SettingSlider_PCunit.prefab");
         var keybindPrefabPath = Path.Combine(paths.ExportedProjectAssetsPath, "res", "uisteam", "panel_prefabs", "setting", "SettingKeyChange_PCunit.prefab");
+        var carouselPrefabPath = Path.Combine(paths.ExportedProjectAssetsPath, "res", "uisteam", "panel_prefabs", "setting", "SettingMutiClickGrop_PCunitGraphic.prefab");
 
         if (!File.Exists(panelPrefabPath))
             throw new FileNotFoundException($"Panel prefab not found: {panelPrefabPath}");
@@ -102,6 +103,22 @@ internal sealed class Generator
         if (keybind is null)
             throw new InvalidOperationException("Keybind button style could not be extracted.");
 
+        CarouselRawStyle? carousel = null;
+        if (File.Exists(carouselPrefabPath))
+        {
+            Console.WriteLine($"Loading carousel prefab: {carouselPrefabPath}");
+            var carouselDocument = UnityPrefabLoader.Load(carouselPrefabPath);
+            Console.WriteLine($"  -> {carouselDocument.GameObjects.Count} GameObjects, {carouselDocument.Components.Count} components");
+            carousel = CarouselStyleExtractor.Extract(carouselDocument, assetNameResolver);
+        }
+        else
+        {
+            Console.WriteLine($"Carousel prefab not found: {carouselPrefabPath}");
+        }
+
+        if (carousel is null)
+            throw new InvalidOperationException("Carousel style could not be extracted.");
+
         var legacyFactoryPath = Path.Combine(outputDir, "PrefabStyleFactory.cs");
         if (File.Exists(legacyFactoryPath))
             File.Delete(legacyFactoryPath);
@@ -111,15 +128,18 @@ internal sealed class Generator
         var switchFactoryPath = Path.Combine(outputDir, "SwitchStyleFactory.cs");
         var sliderFactoryPath = Path.Combine(outputDir, "SliderStyleFactory.cs");
         var keybindFactoryPath = Path.Combine(outputDir, "KeybindButtonStyleFactory.cs");
+        var carouselFactoryPath = Path.Combine(outputDir, "CarouselStyleFactory.cs");
         CSharpFileWriter.WriteRowStyleFactory(rowFactoryPath, row);
         CSharpFileWriter.WriteDropdownStyleFactory(dropdownFactoryPath, dropdown);
         CSharpFileWriter.WriteSwitchStyleFactory(switchFactoryPath, switchStyle);
         CSharpFileWriter.WriteSliderStyleFactory(sliderFactoryPath, slider);
         CSharpFileWriter.WriteKeybindButtonStyleFactory(keybindFactoryPath, keybind);
+        CSharpFileWriter.WriteCarouselStyleFactory(carouselFactoryPath, carousel);
         Console.WriteLine($"Wrote {rowFactoryPath}");
         Console.WriteLine($"Wrote {dropdownFactoryPath}");
         Console.WriteLine($"Wrote {switchFactoryPath}");
         Console.WriteLine($"Wrote {sliderFactoryPath}");
         Console.WriteLine($"Wrote {keybindFactoryPath}");
+        Console.WriteLine($"Wrote {carouselFactoryPath}");
     }
 }

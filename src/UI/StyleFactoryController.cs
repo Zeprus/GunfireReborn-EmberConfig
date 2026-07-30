@@ -26,7 +26,7 @@ internal static class StyleFactoryController
             SliderStyleFactory.Create(rowStyle.Title),
             SwitchStyleFactory.Create(rowStyle.Title),
             DropdownStyleFactory.Create(rowStyle.Title),
-            CarouselStyleFactory.Create(panelRoot, rowStyle.BackgroundSprite, rowStyle.Title),
+            CarouselStyleFactory.Create(rowStyle.Title),
             InputStyleFactory.Create(panelRoot, rowStyle.BackgroundSprite, rowStyle.Title));
     }
 }
@@ -41,12 +41,6 @@ internal static class GroupHeaderStyleFactory
 {
     internal static GroupHeaderStyle Create(Transform panelRoot, TextAppearance fallback) =>
         GroupHeaderStyleCapture.Capture(panelRoot, fallback) ?? GroupHeaderStyle.Default(fallback);
-}
-
-internal static class CarouselStyleFactory
-{
-    internal static CarouselStyle Create(Transform panelRoot, Sprite? fallbackSprite, TextAppearance fallbackText) =>
-        CarouselStyleCapture.Capture(panelRoot, fallbackSprite, fallbackText) ?? CarouselStyle.Default(fallbackSprite, fallbackText);
 }
 
 internal static class InputStyleFactory
