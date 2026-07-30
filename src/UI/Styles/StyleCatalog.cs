@@ -1,5 +1,6 @@
 namespace EmberConfig.UI;
 
+using TMPro;
 using UnityEngine;
 
 internal sealed class StyleCatalog
@@ -14,7 +15,7 @@ internal sealed class StyleCatalog
     public CarouselStyle? Carousel { get; }
     public InputStyle? Input { get; }
 
-    private StyleCatalog(
+    internal StyleCatalog(
         RowStyle row,
         TabStyle? tab,
         GroupHeaderStyle group,
@@ -36,13 +37,13 @@ internal sealed class StyleCatalog
         Input = input;
     }
 
-    internal static StyleCatalog? CaptureFrom(Transform panelRoot)
+    internal static StyleCatalog? Create(Transform panelRoot)
     {
-        var row = RowStyleCapture.Capture(panelRoot);
-        if (row is null)
+        if (panelRoot is null)
             return null;
 
-        var rowStyle = row.Value;
+        var descriptionText = panelRoot.Find("bg_windows/setting_desc/desc")?.GetComponent<TextMeshProUGUI>();
+        var rowStyle = Generated.PrefabData.PrefabStyleFactory.CreateRowStyle(descriptionText);
 
         return new StyleCatalog(
             rowStyle,
