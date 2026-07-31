@@ -10,12 +10,17 @@ internal static class UnityPrefabLoader
 {
     internal static PrefabDocument Load(string path)
     {
+        Console.WriteLine($"  [Loader] reading {path} ...");
         using var reader = new StreamReader(path);
         var stream = new YamlStream();
+        Console.WriteLine($"  [Loader] parsing YAML ...");
         stream.Load(reader);
+        Console.WriteLine($"  [Loader] parsed {stream.Documents.Count} YAML documents");
 
         var components = new Dictionary<long, ComponentNode>();
         var gameObjects = new Dictionary<long, GameObjectNode>();
+
+        Console.WriteLine($"  [Loader] building component / GameObject index ...");
 
         foreach (var document in stream.Documents)
         {
@@ -89,6 +94,8 @@ internal static class UnityPrefabLoader
         }
 
         // Root order by RectTransform children order.
+        Console.WriteLine($"  [Loader] wiring hierarchy ...");
+
         foreach (var component in components.Values.Where(c => c.UnityType == 224))
         {
             if (!rectTransformMap.TryGetValue(component.FileID, out var goFileID))
@@ -105,6 +112,7 @@ internal static class UnityPrefabLoader
             go.Children.AddRange(orderedChildren);
         }
 
+        Console.WriteLine($"  [Loader] done: {gameObjects.Count} GameObjects, {components.Count} components");
         return new PrefabDocument(components, gameObjects);
     }
 

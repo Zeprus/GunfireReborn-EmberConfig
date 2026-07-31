@@ -2,6 +2,7 @@ namespace EmberConfig.UI;
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -46,6 +47,50 @@ internal sealed class TabBarController
 
     public int GetActiveIndex() => buttons.GetActiveIndex();
 
+    private static void SortTabButtons(RectTransform? content)
+    {
+        if (content is null)
+            return;
+
+        var children = new List<Transform>();
+        for (int i = 0; i < content.childCount; i++)
+            children.Add(content.GetChild(i));
+
+        children.Sort(CompareTabOrder);
+
+        for (int i = 0; i < children.Count; i++)
+            children[i].SetSiblingIndex(i);
+    }
+
+    private static int CompareTabOrder(Transform a, Transform b)
+    {
+        bool aNative = a.name.StartsWith("tab_native_", StringComparison.OrdinalIgnoreCase);
+        bool bNative = b.name.StartsWith("tab_native_", StringComparison.OrdinalIgnoreCase);
+
+        if (aNative && !bNative) return -1;
+        if (!aNative && bNative) return 1;
+
+        var aId = GetTabIdentifier(a);
+        var bId = GetTabIdentifier(b);
+
+        if (aNative && bNative)
+        {
+            var aName = NativeTabResolver.TryGetNativeTabName(aId, out var an) ? an : null;
+            var bName = NativeTabResolver.TryGetNativeTabName(bId, out var bn) ? bn : null;
+            var aOrder = aName is not null ? NativeTabResolver.GetNativeTabOrder(aName) : int.MaxValue;
+            var bOrder = bName is not null ? NativeTabResolver.GetNativeTabOrder(bName) : int.MaxValue;
+            return aOrder.CompareTo(bOrder);
+        }
+
+        return string.Compare(aId, bId, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string GetTabIdentifier(Transform t)
+    {
+        var parts = t.name.Split('_', 3);
+        return parts.Length > 2 ? parts[2] : t.name;
+    }
+
     public void Initialize(Transform tabSwitch, Transform tabContainer, TabStyle style)
     {
         this.style = style;
@@ -68,13 +113,10 @@ internal sealed class TabBarController
         view.HideSourceTabs();
 
         var infos = nativeResolver.Scan(view.TabSwitch!);
-        float uniformWidth = view.ComputeUniformTabWidth(infos.Count, style);
-        if (uniformWidth > 0f && style.HasValue)
-            style = style.Value with { Width = uniformWidth };
 
         buttons.BuildNativeTabs(infos, view.Content, style);
+        SortTabButtons(view.Content);
         buttons.RebuildFromContent(view.Content);
-        view.ApplyUniformTabWidth(style);
 
         var active = buttons.GetActiveToggle();
         if (active is null && buttons.InitialActiveIndex >= 0)

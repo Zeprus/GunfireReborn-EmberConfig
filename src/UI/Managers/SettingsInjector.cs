@@ -2,6 +2,7 @@ namespace EmberConfig.UI;
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using EmberConfig.Core;
 using TMPro;
@@ -9,12 +10,23 @@ using UnityEngine;
 
 internal sealed class SettingsInjector
 {
+    private const float BuildBudgetMs = 4f;
+    private const int MinRowsPerFrame = 1;
+
     private readonly SettingsRegistry registry;
     private readonly TabManager tabManager;
     private readonly RowFactory rowFactory;
     private readonly UIFinder uiFinder;
     private readonly GroupBuilder groupBuilder;
     private readonly List<ISettingRow> rows = new();
+    private readonly Queue<BuildJob> buildQueue = new();
+    private readonly Stopwatch buildStopwatch = new();
+
+    private bool isRebuilding;
+    private Transform? currentBuildContent;
+    private string? currentGroup;
+    private string? currentSubGroup;
+    private Transform? currentGroupContainer;
     private string? lastDesc;
 
     internal SettingsInjector(SettingsRegistry registry, TabManager tabManager, RowFactory rowFactory, UIFinder uiFinder)
@@ -27,6 +39,8 @@ internal sealed class SettingsInjector
     }
 
     public bool IsCapturing => rows.Any(r => r.IsCapturing);
+
+    public bool IsRebuilding => isRebuilding;
 
     public void UpdateRows()
     {
@@ -58,23 +72,74 @@ internal sealed class SettingsInjector
         }
     }
 
-    public void Rebuild()
+    public void StartRebuild(string? activeTabName)
     {
         if (!uiFinder.IsReady)
             return;
 
         Clear();
 
-        foreach (var tab in registry.GetTabs())
+        var orderedTabs = tabManager.GetOrderedTabNames().ToList();
+        if (activeTabName is not null)
+        {
+            var prioritized = new List<string> { activeTabName };
+            prioritized.AddRange(orderedTabs.Where(t => !string.Equals(t, activeTabName, StringComparison.OrdinalIgnoreCase)));
+            orderedTabs = prioritized;
+        }
+
+        foreach (var tab in orderedTabs)
         {
             var content = tabManager.GetOrCreateContentForTab(tab);
             if (content is null)
                 continue;
 
-            BuildTab(registry.GetByTab(tab), content);
+            var sorted = registry
+                .GetByTab(tab)
+                .ToList()
+                .Select((entry, index) => (entry, index))
+                .OrderBy(x => x.entry.Location.Group ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(x => x.entry.Location.Group is null ? string.Empty : (x.entry.Location.SubGroup ?? string.Empty), StringComparer.OrdinalIgnoreCase)
+                .ThenBy(x => x.index)
+                .Select(x => x.entry)
+                .ToList();
+
+            foreach (var entry in sorted)
+                buildQueue.Enqueue(new BuildJob(entry, content));
         }
 
-        tabManager.FinalizeLayout();
+        isRebuilding = true;
+    }
+
+    public void BuildNextBatch()
+    {
+        if (!isRebuilding)
+            return;
+
+        if (buildQueue.Count == 0)
+        {
+            isRebuilding = false;
+            tabManager.FinalizeLayout();
+            return;
+        }
+
+        buildStopwatch.Restart();
+        int processed = 0;
+
+        while (buildQueue.Count > 0)
+        {
+            if (processed >= MinRowsPerFrame && buildStopwatch.Elapsed.TotalMilliseconds >= BuildBudgetMs)
+                break;
+
+            var job = buildQueue.Dequeue();
+            ProcessJob(job);
+            processed++;
+        }
+
+        if (buildQueue.Count == 0)
+        {
+            isRebuilding = false;
+            tabManager.FinalizeLayout();
+        }
     }
 
     public void Clear()
@@ -84,6 +149,13 @@ internal sealed class SettingsInjector
         rows.Clear();
         lastDesc = null;
         groupBuilder.Clear();
+
+        buildQueue.Clear();
+        isRebuilding = false;
+        currentBuildContent = null;
+        currentGroup = null;
+        currentSubGroup = null;
+        currentGroupContainer = null;
 
         foreach (var content in tabManager.GetAllContentPanels())
         {
@@ -99,45 +171,42 @@ internal sealed class SettingsInjector
         }
     }
 
-    private void BuildTab(IEnumerable<ISettingEntry> entries, Transform content)
+    private void ProcessJob(BuildJob job)
     {
-        var list = entries.ToList();
-        var ordered = list
-            .Select((entry, index) => (entry, index))
-            .OrderBy(x => x.entry.Location.Group ?? string.Empty, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(x => x.entry.Location.Group is null ? string.Empty : (x.entry.Location.SubGroup ?? string.Empty), StringComparer.OrdinalIgnoreCase)
-            .ThenBy(x => x.index)
-            .Select(x => x.entry)
-            .ToList();
-
-        string? currentGroup = null;
-        string? currentSubGroup = null;
-        Transform? groupContainer = null;
-
-        foreach (var entry in ordered)
+        var content = job.Content;
+        if (content != currentBuildContent)
         {
-            var loc = entry.Location;
-
-            if (!string.Equals(currentGroup, loc.Group, StringComparison.OrdinalIgnoreCase))
-            {
-                groupContainer = groupBuilder.GetOrCreateGroupContainer(content, loc.Group);
-                currentGroup = loc.Group;
-                currentSubGroup = null;
-            }
-
-            if (!string.Equals(currentSubGroup, loc.SubGroup, StringComparison.OrdinalIgnoreCase))
-            {
-                if (loc.SubGroup is not null && !string.IsNullOrWhiteSpace(loc.Group))
-                    groupBuilder.EnsureSubGroupHeader(groupContainer ?? content, loc.Group, loc.SubGroup);
-
-                currentSubGroup = loc.SubGroup;
-            }
-
-            var parent = groupContainer ?? content;
-            var row = rowFactory.CreateRow(entry, parent);
-            if (row is null) continue;
-            rows.Add(row);
-            row.Bind(entry);
+            currentBuildContent = content;
+            currentGroup = null;
+            currentSubGroup = null;
+            currentGroupContainer = null;
         }
+
+        var loc = job.Entry.Location;
+
+        if (!string.Equals(currentGroup, loc.Group, StringComparison.OrdinalIgnoreCase))
+        {
+            currentGroupContainer = groupBuilder.GetOrCreateGroupContainer(content, loc.Group);
+            currentGroup = loc.Group;
+            currentSubGroup = null;
+        }
+
+        if (!string.Equals(currentSubGroup, loc.SubGroup, StringComparison.OrdinalIgnoreCase))
+        {
+            if (loc.SubGroup is not null && !string.IsNullOrWhiteSpace(loc.Group))
+                groupBuilder.EnsureSubGroupHeader(currentGroupContainer ?? content, loc.Group, loc.SubGroup);
+
+            currentSubGroup = loc.SubGroup;
+        }
+
+        var parent = currentGroupContainer ?? content;
+        var row = rowFactory.CreateRow(job.Entry, parent);
+        if (row is null)
+            return;
+
+        rows.Add(row);
+        row.Bind(job.Entry);
     }
+
+    private readonly record struct BuildJob(ISettingEntry Entry, Transform Content);
 }

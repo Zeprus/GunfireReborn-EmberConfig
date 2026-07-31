@@ -6,7 +6,10 @@ using UnityEngine.UI;
 
 internal sealed class TabBarScrollAnimator
 {
-    private const float ScrollSpeed = 8f;
+    private const float BaseDuration = 0.10f;
+    private const float MaxNormalizedSpeed = 2.5f;
+    private const float MinDuration = 0.08f;
+    private const float MaxDuration = 0.40f;
 
     private ScrollRect? scrollRect;
     private RectTransform? content;
@@ -15,7 +18,10 @@ internal sealed class TabBarScrollAnimator
 
     private int lastActiveIndex = -1;
     private bool isTransitioning;
+    private float startNormalized;
     private float targetNormalized;
+    private float transitionDuration;
+    private float elapsed;
 
     public void Initialize(ScrollRect? scrollRect, RectTransform? content, RectTransform? viewportRect, TabButtonCollection buttons)
     {
@@ -29,7 +35,10 @@ internal sealed class TabBarScrollAnimator
     {
         lastActiveIndex = -1;
         isTransitioning = false;
+        startNormalized = 0f;
         targetNormalized = 0f;
+        transitionDuration = 0f;
+        elapsed = 0f;
     }
 
     public void ScrollTo(M1Toggle? activeToggle)
@@ -38,7 +47,7 @@ internal sealed class TabBarScrollAnimator
             return;
 
         int index = buttons.GetIndex(activeToggle);
-        if (index < 0)
+        if (index < 0 || index == lastActiveIndex)
             return;
 
         var activeRect = activeToggle.GetComponent<RectTransform>();
@@ -55,19 +64,14 @@ internal sealed class TabBarScrollAnimator
         float leftPadding = content.GetComponent<HorizontalLayoutGroup>()?.padding.left ?? 0f;
         float activeCenter = activeLeft + activeRect.rect.width * 0.5f;
         float targetLeftEdge = Mathf.Max(0f, activeCenter - viewportWidth * 0.5f - leftPadding);
-        targetNormalized = TabBarLayout.ComputeHorizontalNormalizedPosition(viewportWidth, contentWidth, targetLeftEdge);
+        float computedTarget = TabBarLayout.ComputeHorizontalNormalizedPosition(viewportWidth, contentWidth, targetLeftEdge);
 
-        if (lastActiveIndex < 0 || Math.Abs(index - lastActiveIndex) > 1)
-        {
-            scrollRect.horizontalNormalizedPosition = targetNormalized;
-            scrollRect.velocity = Vector2.zero;
-            isTransitioning = false;
-        }
-        else
-        {
-            isTransitioning = true;
-        }
-
+        startNormalized = scrollRect.horizontalNormalizedPosition;
+        targetNormalized = computedTarget;
+        float distance = Mathf.Abs(targetNormalized - startNormalized);
+        transitionDuration = Mathf.Clamp(BaseDuration + distance / MaxNormalizedSpeed, MinDuration, MaxDuration);
+        elapsed = 0f;
+        isTransitioning = true;
         lastActiveIndex = index;
     }
 
@@ -87,12 +91,14 @@ internal sealed class TabBarScrollAnimator
         if (content is null || scrollRect is null || viewportRect is null || !isTransitioning)
             return;
 
-        float current = scrollRect.horizontalNormalizedPosition;
-        float newPos = Mathf.MoveTowards(current, targetNormalized, ScrollSpeed * deltaTime);
-        scrollRect.horizontalNormalizedPosition = newPos;
+        elapsed += deltaTime;
+        float t = Mathf.Clamp01(elapsed / transitionDuration);
+        float eased = 1f - Mathf.Pow(1f - t, 3f);
+        float newPos = Mathf.Lerp(startNormalized, targetNormalized, eased);
+        scrollRect.horizontalNormalizedPosition = Mathf.Clamp01(newPos);
         scrollRect.velocity = Vector2.zero;
 
-        if (Mathf.Approximately(newPos, targetNormalized))
+        if (t >= 1f)
             isTransitioning = false;
     }
 }

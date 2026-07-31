@@ -58,4 +58,44 @@ public class NativeTabResolverTests
         Assert.Contains("Content_5", names);
         Assert.Equal(names.Count, names.Distinct().Count());
     }
+
+    [Theory]
+    [InlineData("Content_1", "Game Settings")]
+    [InlineData("Content_2", "Mouse/Keyboard")]
+    [InlineData("Content_3", "Video")]
+    [InlineData("Content_4", "Audio")]
+    [InlineData("Content_5", "Controller")]
+    public void TryGetNativeTabName_ReturnsExpectedMapping(string contentName, string expectedTab)
+    {
+        var found = NativeTabResolver.TryGetNativeTabName(contentName, out var tabName);
+
+        Assert.True(found);
+        Assert.Equal(expectedTab, tabName);
+    }
+
+    [Fact]
+    public void TryGetNativeTabName_ReturnsFalseForUnknownContent()
+    {
+        var found = NativeTabResolver.TryGetNativeTabName("Content_99", out var tabName);
+
+        Assert.False(found);
+        Assert.Null(tabName);
+    }
+
+    [Theory]
+    [InlineData("Game Settings", 0)]
+    [InlineData("Mouse/Keyboard", 1)]
+    [InlineData("Video", 2)]
+    [InlineData("Audio", 3)]
+    [InlineData("Controller", 4)]
+    public void GetNativeTabOrder_ReturnsExpectedIndex(string tabName, int expectedOrder)
+    {
+        Assert.Equal(expectedOrder, NativeTabResolver.GetNativeTabOrder(tabName));
+    }
+
+    [Fact]
+    public void GetNativeTabOrder_ReturnsMaxForUnknownTab()
+    {
+        Assert.Equal(int.MaxValue, NativeTabResolver.GetNativeTabOrder("Unknown"));
+    }
 }

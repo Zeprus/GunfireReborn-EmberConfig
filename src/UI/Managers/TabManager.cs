@@ -2,6 +2,7 @@ namespace EmberConfig.UI;
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using EmberConfig.Core;
 using UnityEngine;
 using UnityEngine.UI;
@@ -98,6 +99,44 @@ public sealed class TabManager
     public IEnumerable<Transform> GetAllContentPanels() =>
         activationController.GetAllContentPanels();
 
+    public string? GetActiveTabName()
+    {
+        var active = tabBar.GetActiveToggle();
+        if (active is null)
+            return null;
+
+        if (customTabs.TryGetName(active, out var customName))
+            return customName;
+
+        if (nativeResolver.TryGetContentName(active, out var contentName)
+            && NativeTabResolver.TryGetNativeTabName(contentName, out var nativeName))
+        {
+            return nativeName;
+        }
+
+        return null;
+    }
+
+    public IReadOnlyList<string> GetOrderedTabNames()
+    {
+        var registry = SettingsRegistry.Current;
+        if (registry is null)
+            return new List<string>();
+
+        var all = registry.GetTabs().ToList();
+        var native = all
+            .Where(NativeTabResolver.IsNativeTab)
+            .OrderBy(NativeTabResolver.GetNativeTabOrder)
+            .ToList();
+
+        var custom = all
+            .Where(t => !NativeTabResolver.IsNativeTab(t))
+            .OrderBy(t => t, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        return native.Concat(custom).ToList();
+    }
+
     public void OnUIReady()
     {
         if (uiFinder.TabSwitch is null || uiFinder.Style is null)
@@ -111,12 +150,8 @@ public sealed class TabManager
         var tabStyle = uiFinder.Style.Tab ?? TabStyle.Fallback(uiFinder.Style.Row.Title);
         tabBar.Initialize(uiFinder.TabSwitch, uiFinder.TabSwitch.parent, tabStyle);
 
-        var registry = SettingsRegistry.Current;
-        if (registry is not null)
-        {
-            foreach (var tab in registry.GetTabs())
-                GetOrCreateContentForTab(tab);
-        }
+        foreach (var tab in GetOrderedTabNames())
+            GetOrCreateContentForTab(tab);
 
         tabBar.Rebuild();
 

@@ -55,7 +55,10 @@ internal sealed class TabButtonCollection
             nativeResolver.Register(toggle, info.ContentName);
 
             if (info.IsActive)
+            {
                 initialActiveIndex = i;
+                toggle.SetIsOnWithoutNotify(true);
+            }
         }
 
         nativeTabsBuilt = true;

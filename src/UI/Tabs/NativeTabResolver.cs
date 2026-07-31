@@ -15,6 +15,15 @@ using UnityEngine.UI;
 /// </summary>
 internal sealed class NativeTabResolver
 {
+    private static readonly IReadOnlyList<string> NativeTabNames = new List<string>
+    {
+        "Game Settings",
+        "Mouse/Keyboard",
+        "Video",
+        "Audio",
+        "Controller"
+    };
+
     private static readonly Dictionary<string, string> NativeMappings = new(StringComparer.OrdinalIgnoreCase)
     {
         { "Game Settings", "Content_1" },
@@ -23,6 +32,9 @@ internal sealed class NativeTabResolver
         { "Audio", "Content_4" },
         { "Controller", "Content_5" }
     };
+
+    private static readonly Dictionary<string, string> ContentToName =
+        NativeMappings.ToDictionary(kvp => kvp.Value, kvp => kvp.Key, StringComparer.OrdinalIgnoreCase);
 
     private readonly List<M1Toggle> nativeToggles = new();
     private readonly Dictionary<M1Toggle, string> toggleToContentName = new();
@@ -106,6 +118,30 @@ internal sealed class NativeTabResolver
 
         contentName = null;
         return false;
+    }
+
+    public static bool TryGetNativeTabName(string contentName, [NotNullWhen(true)] out string? tabName)
+    {
+        if (ContentToName.TryGetValue(contentName, out var value))
+        {
+            tabName = value;
+            return true;
+        }
+
+        tabName = null;
+        return false;
+    }
+
+    public static int GetNativeTabOrder(string tabName)
+    {
+        var normalized = Normalize(tabName);
+        for (int i = 0; i < NativeTabNames.Count; i++)
+        {
+            if (string.Equals(NativeTabNames[i], normalized, StringComparison.OrdinalIgnoreCase))
+                return i;
+        }
+
+        return int.MaxValue;
     }
 
     public static IEnumerable<string> GetNativeContentNames() =>

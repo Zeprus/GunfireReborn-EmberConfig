@@ -89,9 +89,23 @@ public class SettingsMenuManager : MonoBehaviour, UI.IKeybindRowServices
         TrackPanel();
         InitializeUIIfNeeded();
         RebuildIfRequested();
+        ContinueBuildIfNeeded();
         UpdateRowsAndState();
         ValidateTabState();
         PollInputAndToast();
+    }
+
+    private void ContinueBuildIfNeeded()
+    {
+        try
+        {
+            if (injector!.IsRebuilding)
+                injector.BuildNextBatch();
+        }
+        catch (Exception ex)
+        {
+            Plugin.Logger?.LogError($"SettingsMenuManager.ContinueBuildIfNeeded failed: {ex}");
+        }
     }
 
     private void TrackPanel()
@@ -126,8 +140,11 @@ public class SettingsMenuManager : MonoBehaviour, UI.IKeybindRowServices
     {
         try
         {
+            if (injector!.IsRebuilding)
+                return;
+
             if (rebuildCoordinator.TryRebuild(panelTracker!.IsOpen, uiFinder!.IsReady))
-                injector!.Rebuild();
+                injector!.StartRebuild(tabManager!.GetActiveTabName());
         }
         catch (Exception ex)
         {

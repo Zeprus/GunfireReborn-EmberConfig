@@ -1,6 +1,7 @@
 namespace EmberConfig.UI;
 
 using System;
+using EmberConfig;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,6 +16,7 @@ internal sealed class TabBarView
     private RectTransform? content;
     private Transform? container;
     private ScrollRect? scrollRect;
+    private Action<float>? onScrollSensitivityChanged;
 
     public RectTransform? Content => content;
     public RectTransform? Viewport => viewportRect;
@@ -78,6 +80,12 @@ internal sealed class TabBarView
 
     public void Reset()
     {
+        if (onScrollSensitivityChanged is not null)
+        {
+            EmberConfigSettings.TabScrollSensitivityChanged -= onScrollSensitivityChanged;
+            onScrollSensitivityChanged = null;
+        }
+
         RestoreSourceTabs();
 
         if (scrollRect is not null)
@@ -120,22 +128,19 @@ internal sealed class TabBarView
                 sourceLayout.padding.top,
                 sourceLayout.padding.bottom);
 
-            targetLayout.childControlWidth = sourceLayout.childControlWidth;
-            targetLayout.childControlHeight = sourceLayout.childControlHeight;
-            targetLayout.childForceExpandWidth = sourceLayout.childForceExpandWidth;
-            targetLayout.childForceExpandHeight = sourceLayout.childForceExpandHeight;
             targetLayout.childAlignment = sourceLayout.childAlignment;
         }
         else
         {
             targetLayout.spacing = 0f;
             targetLayout.padding = new RectOffset(0, 0, 0, 0);
-            targetLayout.childControlWidth = true;
-            targetLayout.childControlHeight = true;
-            targetLayout.childForceExpandWidth = false;
-            targetLayout.childForceExpandHeight = false;
             targetLayout.childAlignment = TextAnchor.UpperLeft;
         }
+
+        targetLayout.childControlWidth = true;
+        targetLayout.childControlHeight = true;
+        targetLayout.childForceExpandWidth = false;
+        targetLayout.childForceExpandHeight = false;
 
         var fitter = content.GetComponent<ContentSizeFitter>();
         if (fitter is null)
@@ -256,10 +261,17 @@ internal sealed class TabBarView
         scrollRect.vertical = false;
         scrollRect.movementType = ScrollRect.MovementType.Clamped;
         scrollRect.inertia = false;
-        scrollRect.scrollSensitivity = 20f;
+        scrollRect.scrollSensitivity = EmberConfigSettings.TabScrollSensitivity;
         scrollRect.content = content;
         scrollRect.viewport = viewportRect;
         scrollRect.horizontalNormalizedPosition = 0f;
         scrollRect.enabled = true;
+
+        onScrollSensitivityChanged = value =>
+        {
+            if (scrollRect is not null)
+                scrollRect.scrollSensitivity = value;
+        };
+        EmberConfigSettings.TabScrollSensitivityChanged += onScrollSensitivityChanged;
     }
 }
