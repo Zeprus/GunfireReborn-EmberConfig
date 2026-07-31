@@ -129,6 +129,7 @@ public class SettingsMenuManager : MonoBehaviour, UI.IKeybindRowServices
         {
             uiFinder.Initialize(panelTracker.PanelRoot);
             tabManager!.OnUIReady();
+            VanillaSliderInputPatcher.Patch(uiFinder);
         }
         catch (Exception ex)
         {

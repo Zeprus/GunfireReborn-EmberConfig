@@ -1,5 +1,6 @@
 namespace EmberConfig.UI;
 
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -80,13 +81,60 @@ internal static class SliderElementBuilder
 
         sliderObj.SetActive(true);
 
-        var numObj = RowElementBuilder.CreateObject("Num", sliderPcUnit.transform);
-        sliderStyle.NumRect.Apply(numObj.GetComponent<RectTransform>());
-        RowElementBuilder.AddText(numObj, sliderStyle.NumTextAppearance, string.Empty);
+        BuildNumInput(sliderStyle, style, sliderPcUnit.transform);
 
         VanillaComponentApplier.ApplyToRow(root.transform, slider);
         VanillaComponentApplier.AttachAudio(slider.transform);
 
         return root.transform;
+    }
+
+    private static void BuildNumInput(SliderStyle sliderStyle, RowStyle rowStyle, Transform sliderPcUnit)
+    {
+        var numObj = RowElementBuilder.CreateObject("Num", sliderPcUnit.transform);
+        sliderStyle.NumRect.Apply(numObj.GetComponent<RectTransform>());
+
+        // Raycast target for the input field.
+        numObj.AddComponent<CanvasRenderer>();
+        var image = numObj.AddComponent<Image>();
+        image.sprite = rowStyle.BackgroundSprite;
+        image.type = rowStyle.BackgroundType;
+        image.color = Color.clear;
+        image.raycastTarget = true;
+
+        numObj.AddComponent<RectMask2D>();
+
+        var textAreaObj = RowElementBuilder.CreateObject("Text Area", numObj.transform);
+        RowElementBuilder.SetRect(textAreaObj, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        textAreaObj.AddComponent<RectMask2D>();
+
+        var textObj = RowElementBuilder.CreateObject("Text", textAreaObj.transform);
+        RowElementBuilder.SetRect(textObj, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        var text = RowElementBuilder.AddText(textObj, sliderStyle.NumTextAppearance, string.Empty);
+
+        var placeholderObj = RowElementBuilder.CreateObject("Placeholder", textAreaObj.transform);
+        RowElementBuilder.SetRect(placeholderObj, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        var placeholder = RowElementBuilder.AddText(placeholderObj, Dimmed(sliderStyle.NumTextAppearance), "...");
+        placeholder.raycastTarget = false;
+
+        var input = numObj.AddComponent<TMP_InputField>();
+        input.onEndEdit ??= new TMP_InputField.SubmitEvent();
+        input.onSelect ??= new TMP_InputField.SelectionEvent();
+        input.textViewport = textAreaObj.GetComponent<RectTransform>();
+        input.textComponent = text;
+        input.placeholder = placeholder;
+        input.targetGraphic = image;
+        input.pointSize = sliderStyle.NumTextAppearance.FontSize;
+        input.selectionColor = new Color(0.25f, 0.25f, 0.25f, 0.75f);
+        input.caretColor = text.color;
+        input.contentType = TMP_InputField.ContentType.DecimalNumber;
+        input.interactable = true;
+        input.transition = Selectable.Transition.None;
+    }
+
+    private static TextAppearance Dimmed(TextAppearance appearance)
+    {
+        var c = appearance.Color;
+        return appearance with { Color = new Color(c.r, c.g, c.b, c.a * 0.5f) };
     }
 }

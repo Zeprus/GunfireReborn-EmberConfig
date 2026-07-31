@@ -21,6 +21,7 @@ internal sealed class TabBarController
     private readonly TabBarNavigator navigator = new();
 
     private TabStyle? style;
+    private int nativeTabCount;
 
     public event Action<int>? OnTabSelected;
 
@@ -99,6 +100,7 @@ internal sealed class TabBarController
         scroll.Initialize(view.ScrollRect, view.Content, view.Viewport, buttons);
         visuals.Initialize(style, buttons);
         navigator.Initialize(buttons, style, index => SelectTab(index));
+        EmberConfigSettings.TabWidthScalingChanged += OnTabWidthScalingChanged;
         view.HideSourceTabs();
     }
 
@@ -113,6 +115,7 @@ internal sealed class TabBarController
         view.HideSourceTabs();
 
         var infos = nativeResolver.Scan(view.TabSwitch!);
+        nativeTabCount = infos.Count;
 
         buttons.BuildNativeTabs(infos, view.Content, style);
         SortTabButtons(view.Content);
@@ -126,6 +129,7 @@ internal sealed class TabBarController
         }
 
         visuals.ApplyVisuals(active);
+        ApplyTabWidth(EmberConfigSettings.TabWidthScaling);
         view.RefreshSize();
     }
 
@@ -147,13 +151,35 @@ internal sealed class TabBarController
         scroll.Update(deltaTime);
     }
 
+    private void ApplyTabWidth(float scaling)
+    {
+        if (!style.HasValue)
+            return;
+
+        var baseWidth = view.ComputeUniformTabWidth(nativeTabCount, style);
+        var width = baseWidth * (scaling / 100f);
+        var height = style.Value.Height;
+        view.ApplyUniformTabWidth(width, height);
+    }
+
+    private void OnTabWidthScalingChanged(float scaling)
+    {
+        if (!view.IsReady || !style.HasValue)
+            return;
+
+        ApplyTabWidth(scaling);
+        view.RefreshSize();
+    }
+
     public void Reset()
     {
+        EmberConfigSettings.TabWidthScalingChanged -= OnTabWidthScalingChanged;
         view.Reset();
         buttons.Clear();
         scroll.Reset();
         visuals.Reset();
         navigator.Reset();
         style = null;
+        nativeTabCount = 0;
     }
 }

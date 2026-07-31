@@ -59,4 +59,7 @@ public sealed class UIFinder
     public Transform? GetContent(string name) =>
         contentPanels.TryGetValue(name, out var t) ? t : null;
 
+    public IEnumerable<Transform> GetAllContentPanels() =>
+        contentPanels.Values;
+
 }

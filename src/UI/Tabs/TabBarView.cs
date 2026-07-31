@@ -174,13 +174,11 @@ internal sealed class TabBarView
         return width > 0f ? width : style.Value.Width;
     }
 
-    public void ApplyUniformTabWidth(TabStyle? style)
+    public void ApplyUniformTabWidth(float width, float height)
     {
-        if (content is null || !style.HasValue)
+        if (content is null)
             return;
 
-        float width = style.Value.Width;
-        float height = style.Value.Height;
         for (int i = 0; i < content.childCount; i++)
         {
             var child = content.GetChild(i);
@@ -202,6 +200,10 @@ internal sealed class TabBarView
                 layout.minHeight = height;
                 layout.preferredHeight = height;
             }
+
+            var checkmark = child.Find("Background/Checkmark")?.GetComponent<RectTransform>();
+            if (checkmark is not null)
+                checkmark.sizeDelta = new Vector2(width, checkmark.sizeDelta.y);
         }
     }
 

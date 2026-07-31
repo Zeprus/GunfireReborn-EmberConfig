@@ -3,13 +3,10 @@ namespace EmberConfig.UI;
 using System;
 using UnityEngine;
 using UnityEngine.UI;
+using static System.Math;
 
 internal sealed class TabBarScrollAnimator
 {
-    private const float BaseDuration = 0.10f;
-    private const float MaxNormalizedSpeed = 2.5f;
-    private const float MinDuration = 0.08f;
-    private const float MaxDuration = 0.40f;
 
     private ScrollRect? scrollRect;
     private RectTransform? content;
@@ -63,13 +60,13 @@ internal sealed class TabBarScrollAnimator
 
         float leftPadding = content.GetComponent<HorizontalLayoutGroup>()?.padding.left ?? 0f;
         float activeCenter = activeLeft + activeRect.rect.width * 0.5f;
-        float targetLeftEdge = Mathf.Max(0f, activeCenter - viewportWidth * 0.5f - leftPadding);
+        float targetLeftEdge = Max(0f, activeCenter - viewportWidth * 0.5f - leftPadding);
         float computedTarget = TabBarLayout.ComputeHorizontalNormalizedPosition(viewportWidth, contentWidth, targetLeftEdge);
 
         startNormalized = scrollRect.horizontalNormalizedPosition;
         targetNormalized = computedTarget;
-        float distance = Mathf.Abs(targetNormalized - startNormalized);
-        transitionDuration = Mathf.Clamp(BaseDuration + distance / MaxNormalizedSpeed, MinDuration, MaxDuration);
+        float distance = Abs(targetNormalized - startNormalized);
+        transitionDuration = TabBarScrollEasing.ComputeDuration(EmberConfigSettings.TabScrollAnimationDuration, distance);
         elapsed = 0f;
         isTransitioning = true;
         lastActiveIndex = index;
@@ -92,10 +89,10 @@ internal sealed class TabBarScrollAnimator
             return;
 
         elapsed += deltaTime;
-        float t = Mathf.Clamp01(elapsed / transitionDuration);
-        float eased = 1f - Mathf.Pow(1f - t, 3f);
-        float newPos = Mathf.Lerp(startNormalized, targetNormalized, eased);
-        scrollRect.horizontalNormalizedPosition = Mathf.Clamp01(newPos);
+        float t = Clamp(elapsed / transitionDuration, 0f, 1f);
+        float eased = TabBarScrollEasing.EaseOutCubic(t);
+        float newPos = TabBarScrollEasing.Lerp(startNormalized, targetNormalized, eased);
+        scrollRect.horizontalNormalizedPosition = Clamp(newPos, 0f, 1f);
         scrollRect.velocity = Vector2.zero;
 
         if (t >= 1f)

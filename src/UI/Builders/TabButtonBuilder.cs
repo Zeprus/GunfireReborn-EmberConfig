@@ -6,9 +6,6 @@ using UnityEngine.UI;
 
 internal static class TabButtonBuilder
 {
-    private const float HorizontalPadding = 48f;
-    private const float MaxTabWidth = 480f;
-
     /// <summary>
     /// Builds a generic selectable tab button that is sized/positioned by a
     /// parent <see cref="HorizontalLayoutGroup"/>.
@@ -68,18 +65,14 @@ internal static class TabButtonBuilder
         var typeNameText = RowElementBuilder.AddText(typeNameObj, tabStyle.Unselected, label);
         typeNameText.raycastTarget = false;
         typeNameText.enableWordWrapping = false;
-
-        var labelWidth = typeNameText.preferredWidth;
-        var finalWidth = Mathf.Clamp(labelWidth + HorizontalPadding, tabStyle.Width, MaxTabWidth);
-
-        rect.sizeDelta = new Vector2(finalWidth, tabStyle.Height);
-        layout.minWidth = finalWidth;
-        layout.preferredWidth = finalWidth;
-
         typeNameText.enableAutoSizing = true;
         typeNameText.overflowMode = TextOverflowModes.Ellipsis;
         typeNameText.fontSizeMin = 10f;
         typeNameText.fontSizeMax = tabStyle.Unselected.FontSize > 0f ? tabStyle.Unselected.FontSize : 30f;
+
+        rect.sizeDelta = new Vector2(tabStyle.Width, tabStyle.Height);
+        layout.minWidth = tabStyle.Width;
+        layout.preferredWidth = tabStyle.Width;
 
         backgroundObj.SetActive(false);
 

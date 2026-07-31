@@ -26,7 +26,7 @@ public class Plugin : BasePlugin
 
     private void RegisterEmberConfigSettings()
     {
-        var entry = SettingsMenu.Register(Config, new SettingOptions<float>(
+        var tabScrollSensitivity = SettingsMenu.Register(Config, new SettingOptions<float>(
             Section: "EmberConfig",
             Key: "TabScrollSensitivity",
             DefaultValue: EmberConfigSettings.DefaultTabScrollSensitivity,
@@ -39,6 +39,34 @@ public class Plugin : BasePlugin
                 EmberConfigSettings.MaxTabScrollSensitivity),
             OnValueChanged: v => EmberConfigSettings.TabScrollSensitivity = v));
 
-        EmberConfigSettings.TabScrollSensitivity = entry.Value;
+        var tabWidthScaling = SettingsMenu.Register(Config, new SettingOptions<int>(
+            Section: "EmberConfig",
+            Key: "TabWidthScaling",
+            DefaultValue: (int)EmberConfigSettings.DefaultTabWidthScaling,
+            Description: "Tab width as a percentage of the auto-calculated base width (viewport / native tabs).",
+            Label: "Tab Width Scaling",
+            Tab: "EmberConfig",
+            Group: "EmberConfig",
+            AcceptableValues: new AcceptableValueRange<int>(
+                (int)EmberConfigSettings.MinTabWidthScaling,
+                (int)EmberConfigSettings.MaxTabWidthScaling),
+            OnValueChanged: v => EmberConfigSettings.TabWidthScaling = v));
+
+        var tabScrollAnimationDuration = SettingsMenu.Register(Config, new SettingOptions<float>(
+            Section: "EmberConfig",
+            Key: "TabScrollAnimationDuration",
+            DefaultValue: EmberConfigSettings.DefaultTabScrollAnimationDuration,
+            Description: "Base duration of the tab scroll animation, in seconds. Far tabs may take up to twice as long.",
+            Label: "Tab Scroll Animation Duration",
+            Tab: "EmberConfig",
+            Group: "EmberConfig",
+            AcceptableValues: new AcceptableValueRange<float>(
+                EmberConfigSettings.MinTabScrollAnimationDuration,
+                EmberConfigSettings.MaxTabScrollAnimationDuration),
+            OnValueChanged: v => EmberConfigSettings.TabScrollAnimationDuration = v));
+
+        EmberConfigSettings.TabScrollSensitivity = tabScrollSensitivity.Value;
+        EmberConfigSettings.TabWidthScaling = tabWidthScaling.Value;
+        EmberConfigSettings.TabScrollAnimationDuration = tabScrollAnimationDuration.Value;
     }
 }

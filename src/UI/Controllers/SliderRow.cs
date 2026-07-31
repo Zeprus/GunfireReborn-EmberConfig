@@ -19,7 +19,7 @@ internal class SliderRow : SettingRowBase
 
     private Slider? slider;
     private TextMeshProUGUI? titleText;
-    private TextMeshProUGUI? valueText;
+    private TMP_InputField? valueInput;
     private bool isInt;
     private Action<float>? onSliderChanged;
 
@@ -27,7 +27,7 @@ internal class SliderRow : SettingRowBase
     {
         titleText = FindTitleText();
         slider = Transform.Find("Item/Slider_PCunit/Slider")?.GetComponent<Slider>();
-        valueText = Transform.Find("Item/Slider_PCunit/Num")?.GetComponent<TextMeshProUGUI>();
+        valueInput = Transform.Find("Item/Slider_PCunit/Num")?.GetComponent<TMP_InputField>();
         isInt = entry.Config.SettingType == typeof(int);
 
         if (slider is null) return;
@@ -50,7 +50,24 @@ internal class SliderRow : SettingRowBase
         slider.onValueChanged.RemoveAllListeners();
         slider.onValueChanged.AddListener(onSliderChanged);
 
+        if (valueInput is not null)
+        {
+            valueInput.onEndEdit ??= new TMP_InputField.SubmitEvent();
+            valueInput.onSelect ??= new TMP_InputField.SelectionEvent();
 
+            valueInput.contentType = isInt
+                ? TMP_InputField.ContentType.IntegerNumber
+                : TMP_InputField.ContentType.DecimalNumber;
+
+            Action<string> onEndEdit = OnEndEdit;
+            Action<string> onSelect = OnSelect;
+
+            valueInput.onEndEdit.RemoveAllListeners();
+            valueInput.onEndEdit.AddListener(onEndEdit);
+
+            valueInput.onSelect.RemoveAllListeners();
+            valueInput.onSelect.AddListener(onSelect);
+        }
     }
 
     protected override void OnRefresh()
@@ -71,7 +88,7 @@ internal class SliderRow : SettingRowBase
             slider.onValueChanged.AddListener(onSliderChanged!);
         }
 
-        UpdateValueText();
+        SetValueText();
     }
 
     private void OnSliderChanged(float value)
@@ -84,25 +101,54 @@ internal class SliderRow : SettingRowBase
         }
 
         if (Entry is null) return;
-        var newValue = isInt ? (object)Mathf.RoundToInt(value) : value;
+        var newValue = isInt ? (object)Convert.ToInt32(value) : value;
         Entry.Config.BoxedValue = newValue;
     }
 
-    private void UpdateValueText()
+    private void OnSelect(string _)
     {
-        if (valueText is null) return;
+        if (valueInput is null) return;
+        valueInput.text = FormatValue();
+    }
+
+    private void OnEndEdit(string text)
+    {
+        if (valueInput is null || slider is null) return;
+
+        if (!float.TryParse(text, out var parsed))
+        {
+            valueInput.text = FormatValue();
+            return;
+        }
+
+        var clamped = System.Math.Clamp(parsed, slider.minValue, slider.maxValue);
+        if (isInt)
+            clamped = Convert.ToInt32(clamped);
+
+        slider.value = clamped;
+    }
+
+    private void SetValueText()
+    {
+        if (valueInput is null || valueInput.isFocused)
+            return;
+
+        valueInput.text = FormatValue();
+    }
+
+    private string FormatValue()
+    {
         var value = Entry?.Config.BoxedValue;
-        if (value is null) return;
+        if (value is null)
+            return string.Empty;
 
         try
         {
-            valueText.text = isInt ? value.ToString() : $"{Convert.ToSingle(value):F2}";
+            return isInt ? value.ToString()! : $"{Convert.ToSingle(value):F2}";
         }
         catch (Exception)
         {
-            valueText.text = string.Empty;
+            return string.Empty;
         }
     }
-
-
 }
