@@ -11,7 +11,8 @@ internal readonly record struct InputStyle(
     RectData InputRect,
     RectData TextAreaRect,
     TextAppearance TextAppearance,
-    TextAppearance PlaceholderAppearance)
+    TextAppearance PlaceholderAppearance,
+    Color SelectionColor)
 {
     public uint ClickSoundEventId { get; init; }
 
@@ -26,4 +27,9 @@ internal readonly record struct InputStyle(
         Vector2.zero, new Vector2(0.5f, 0.5f));
 
     internal static readonly Color DefaultBackgroundColor = new(1f, 1f, 1f, 0.1f);
+
+    // Measured from the highlighted dropdown item in-game (average ~ RGB 67,59,39 over the
+    // black list background, with alpha 0.5). This is the actual hover/selection fill rather
+    // than the prefab's gold Toggle highlightedColor.
+    internal static readonly Color DefaultSelectionColor = new(0.3725f, 0.3176f, 0.1843f, 0.5019608f);
 }

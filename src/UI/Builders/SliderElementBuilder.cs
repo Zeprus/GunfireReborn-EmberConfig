@@ -22,7 +22,11 @@ internal static class SliderElementBuilder
         hlg.childControlWidth = sliderStyle.ChildControlWidth;
         hlg.childControlHeight = sliderStyle.ChildControlHeight;
         hlg.childAlignment = sliderStyle.ChildAlignment;
-        hlg.padding = new RectOffset(sliderStyle.PaddingLeft, 0, 0, 0);
+        hlg.padding = new RectOffset(
+            sliderStyle.PaddingLeft,
+            sliderStyle.PaddingRight,
+            sliderStyle.PaddingTop,
+            sliderStyle.PaddingBottom);
 
         var sliderObj = RowElementBuilder.CreateObject("Slider", sliderPcUnit.transform);
         sliderObj.SetActive(false);
@@ -30,7 +34,18 @@ internal static class SliderElementBuilder
 
         var slider = sliderObj.AddComponent<M1Slider>();
         slider.onValueChanged ??= new Slider.SliderEvent();
+        slider.DragStart ??= new Slider.SliderEvent();
+        slider.DragStop ??= new Slider.SliderEvent();
+        slider.PointerDown ??= new Slider.SliderEvent();
+        slider.PointerUp ??= new Slider.SliderEvent();
         sliderObj.AddComponent<CanvasRenderer>();
+        slider.transition = sliderStyle.SliderTransition;
+        slider.colors = sliderStyle.SliderColorBlock;
+        slider.direction = sliderStyle.Direction;
+        slider.wholeNumbers = sliderStyle.WholeNumbers;
+        slider.minValue = sliderStyle.MinValue;
+        slider.maxValue = sliderStyle.MaxValue;
+        slider.value = sliderStyle.MinValue;
 
         var background = RowElementBuilder.CreateObject("Background", sliderObj.transform);
         sliderStyle.BackgroundRect.Apply(background.GetComponent<RectTransform>());
@@ -67,7 +82,7 @@ internal static class SliderElementBuilder
 
         var numObj = RowElementBuilder.CreateObject("Num", sliderPcUnit.transform);
         sliderStyle.NumRect.Apply(numObj.GetComponent<RectTransform>());
-        RowElementBuilder.AddText(numObj, sliderStyle.NumTextAppearance, string.Empty, TextAlignmentOptions.Right);
+        RowElementBuilder.AddText(numObj, sliderStyle.NumTextAppearance, string.Empty);
 
         VanillaComponentApplier.ApplyToRow(root.transform, slider);
         VanillaComponentApplier.AttachAudio(slider.transform);

@@ -30,8 +30,11 @@ internal readonly record struct DropdownTemplateStyle(
     Image.Type ItemCheckmarkType,
     RectData ItemLabelRect,
     TextAppearance ItemLabelTextAppearance,
-    TextAlignmentOptions ItemLabelAlignment)
+    TextAlignmentOptions ItemLabelAlignment,
+    int CtrlBackKey = 0)
 {
+    public ColorBlock ItemColorBlock { get; init; } = ColorBlock.defaultColorBlock;
+
     internal static DropdownTemplateStyle Default(Sprite? fallbackSprite, TextAppearance fallbackText) =>
         new(
             new RectData(Vector2.zero, new Vector2(1f, 0f), new Vector2(0f, 150f), Vector2.zero, new Vector2(0.5f, 1f)),

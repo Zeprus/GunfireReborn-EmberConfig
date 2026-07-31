@@ -12,22 +12,23 @@ public class SettingsPanelStateListener : MonoBehaviour
     public SettingsPanelStateListener(IntPtr ptr) : base(ptr) { }
 
     /// <summary>
-    /// Raised when the panel is enabled (opened).
+    /// Set by <see cref="PanelTracker"/> to receive OnEnable callbacks without using
+    /// IL2CPP-incompatible <c>Action</c> event add/remove methods.
     /// </summary>
-    public event Action? PanelEnabled;
+    public Action? OnEnabled;
 
     /// <summary>
-    /// Raised when the panel is disabled (closed).
+    /// Set by <see cref="PanelTracker"/> to receive OnDisable callbacks.
     /// </summary>
-    public event Action? PanelDisabled;
+    public Action? OnDisabled;
 
     private void OnEnable()
     {
-        PanelEnabled?.Invoke();
+        OnEnabled?.Invoke();
     }
 
     private void OnDisable()
     {
-        PanelDisabled?.Invoke();
+        OnDisabled?.Invoke();
     }
 }

@@ -1,7 +1,5 @@
 namespace EmberConfig.UI;
 
-using UnityEngine;
-
 internal sealed class StyleCatalog
 {
     public RowStyle Row { get; }
@@ -14,7 +12,7 @@ internal sealed class StyleCatalog
     public CarouselStyle? Carousel { get; }
     public InputStyle? Input { get; }
 
-    private StyleCatalog(
+    internal StyleCatalog(
         RowStyle row,
         TabStyle? tab,
         GroupHeaderStyle group,
@@ -36,23 +34,5 @@ internal sealed class StyleCatalog
         Input = input;
     }
 
-    internal static StyleCatalog? CaptureFrom(Transform panelRoot)
-    {
-        var row = RowStyleCapture.Capture(panelRoot);
-        if (row is null)
-            return null;
 
-        var rowStyle = row.Value;
-
-        return new StyleCatalog(
-            rowStyle,
-            TabStyleCapture.Capture(panelRoot, rowStyle.Title),
-            GroupHeaderStyleCapture.Capture(panelRoot, rowStyle.Title) ?? GroupHeaderStyle.Default(rowStyle.Title),
-            KeybindButtonStyleCapture.Capture(panelRoot, rowStyle.Title, rowStyle.BackgroundSprite),
-            SliderStyleCapture.Capture(panelRoot, rowStyle.BackgroundSprite, rowStyle.Title),
-            SwitchStyleCapture.Capture(panelRoot, rowStyle.BackgroundSprite, rowStyle.Title),
-            DropdownStyleCapture.Capture(panelRoot, rowStyle.BackgroundSprite, rowStyle.Title),
-            CarouselStyleCapture.Capture(panelRoot, rowStyle.BackgroundSprite, rowStyle.Title) ?? CarouselStyle.Default(rowStyle.BackgroundSprite, rowStyle.Title),
-            InputStyleCapture.Capture(panelRoot, rowStyle.BackgroundSprite, rowStyle.Title));
-    }
 }

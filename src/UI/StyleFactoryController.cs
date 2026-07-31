@@ -1,0 +1,40 @@
+namespace EmberConfig.UI;
+
+using EmberConfig.Generated.PrefabData;
+using TMPro;
+using UnityEngine;
+
+/// <summary>
+/// Central entry point for building the <see cref="StyleCatalog"/>.
+/// Delegates to a dedicated factory per UI element.
+/// </summary>
+internal static class StyleFactoryController
+{
+    internal static StyleCatalog? Create(Transform panelRoot)
+    {
+        if (panelRoot is null)
+            return null;
+
+        var descriptionText = panelRoot.Find("bg_windows/setting_desc/desc")?.GetComponent<TextMeshProUGUI>();
+        var rowStyle = RowStyleFactory.Create(descriptionText);
+
+        return new StyleCatalog(
+            rowStyle,
+            TabStyleFactory.Create(rowStyle.Title),
+            GroupHeaderStyleFactory.Create(panelRoot, rowStyle.Title),
+            KeybindButtonStyleFactory.Create(rowStyle.Title),
+            SliderStyleFactory.Create(rowStyle.Title),
+            SwitchStyleFactory.Create(rowStyle.Title),
+            DropdownStyleFactory.Create(rowStyle.Title),
+            CarouselStyleFactory.Create(rowStyle.Title),
+            InputStyleFactory.Create(rowStyle.BackgroundSprite, rowStyle.Title));
+    }
+}
+
+internal static class GroupHeaderStyleFactory
+{
+    internal static GroupHeaderStyle Create(Transform panelRoot, TextAppearance fallback) =>
+        GroupHeaderStyleCapture.Capture(panelRoot, fallback) ?? GroupHeaderStyle.Default(fallback);
+}
+
+

@@ -19,7 +19,7 @@
       https://nuget.bepinex.dev/v3/index.json;
       https://nuget.samboy.dev/v3/index.json
     </RestoreAdditionalProjectSources>
-    <DefaultItemExcludes>$(DefaultItemExcludes);EmberConfig.Tests\**;ExampleMod\**</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);EmberConfig.Tests\**;ExampleMod\**;PrefabDataGen\**;src\Generated\PrefabData\RawStyles\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <PropertyGroup Label="GamePaths">

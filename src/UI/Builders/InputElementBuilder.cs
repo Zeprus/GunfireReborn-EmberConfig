@@ -34,16 +34,14 @@ internal static class InputElementBuilder
         var text = RowElementBuilder.AddText(
             textObj,
             inputStyle?.TextAppearance ?? style.Title,
-            string.Empty,
-            TextAlignmentOptions.Left);
+            string.Empty);
 
         var placeholderObj = RowElementBuilder.CreateObject("Placeholder", textAreaObj.transform);
         RowElementBuilder.SetRect(placeholderObj, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         var placeholder = RowElementBuilder.AddText(
             placeholderObj,
             inputStyle?.PlaceholderAppearance ?? style.Title,
-            "...",
-            TextAlignmentOptions.Left);
+            "...");
         placeholder.raycastTarget = false;
 
         var input = inputObj.AddComponent<TMP_InputField>();
@@ -54,7 +52,10 @@ internal static class InputElementBuilder
         input.placeholder = placeholder;
         input.targetGraphic = image;
         input.pointSize = (inputStyle?.TextAppearance ?? style.Title).FontSize;
+        input.selectionColor = inputStyle?.SelectionColor ?? InputStyle.DefaultSelectionColor;
+        input.caretColor = text.color;
         input.interactable = true;
+        input.transition = Selectable.Transition.None;
 
         inputObj.SetActive(true);
 

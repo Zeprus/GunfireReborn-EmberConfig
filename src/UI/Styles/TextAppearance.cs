@@ -5,7 +5,7 @@ using UnityEngine;
 
 internal readonly record struct TextAppearance(
     TMP_FontAsset Font,
-    Material FontMaterial,
+    Material? FontMaterial,
     float FontSize,
     Color Color,
     TextAlignmentOptions Alignment = TextAlignmentOptions.Center,

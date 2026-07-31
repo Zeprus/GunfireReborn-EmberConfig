@@ -15,7 +15,8 @@ internal static class TextAppearanceApplier
     internal static void Apply(TextMeshProUGUI text, TextAppearance appearance)
     {
         text.font = appearance.Font;
-        text.fontSharedMaterial = appearance.FontMaterial;
+        if (appearance.Font is not null && appearance.FontMaterial == appearance.Font.material)
+            text.fontSharedMaterial = appearance.FontMaterial;
         text.fontSize = appearance.FontSize;
         text.fontSizeMin = appearance.FontSizeMin;
         text.fontSizeMax = appearance.FontSizeMax;

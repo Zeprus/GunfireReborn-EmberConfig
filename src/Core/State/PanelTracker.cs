@@ -94,8 +94,8 @@ public sealed class PanelTracker
         if (listener is null)
             listener = go.AddComponent<SettingsPanelStateListener>();
 
-        listener.PanelEnabled += OnPanelEnabled;
-        listener.PanelDisabled += OnPanelDisabled;
+        listener.OnEnabled = OnPanelEnabled;
+        listener.OnDisabled = OnPanelDisabled;
 
         if (go.activeInHierarchy)
             OnPanelEnabled();
@@ -105,7 +105,7 @@ public sealed class PanelTracker
     {
         if (listener is null || listener.Equals(null)) return;
 
-        listener.PanelEnabled -= OnPanelEnabled;
-        listener.PanelDisabled -= OnPanelDisabled;
+        listener.OnEnabled = null;
+        listener.OnDisabled = null;
     }
 }

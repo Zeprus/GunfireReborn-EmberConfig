@@ -1,0 +1,151 @@
+namespace EmberConfig.PrefabDataGen.Generation;
+
+using System;
+using System.IO;
+using EmberConfig.PrefabDataGen.Configuration;
+using EmberConfig.PrefabDataGen.Extraction;
+using EmberConfig.PrefabDataGen.Models;
+using EmberConfig.PrefabDataGen.Parsing;
+using EmberConfig.PrefabDataGen.Resolution;
+
+internal sealed class Generator
+{
+    private readonly Paths paths;
+
+    public Generator(Paths paths)
+    {
+        this.paths = paths;
+    }
+
+    public void Run()
+    {
+        var assetNameResolver = new AssetNameResolver(paths.ExportedProjectAssetsPath);
+        var panelPrefabPath = Path.Combine(paths.ExportedProjectAssetsPath, "res", "uisteam", "panel_prefabs", "setting", "PC_Panel_setting.prefab");
+        var dropdownPrefabPath = Path.Combine(paths.ExportedProjectAssetsPath, "res", "uisteam", "panel_prefabs", "setting", "SettingDropdown_PCunit.prefab");
+        var switchPrefabPath = Path.Combine(paths.ExportedProjectAssetsPath, "res", "uisteam", "panel_prefabs", "setting", "SettingClickGroup_PCunit.prefab");
+        var sliderPrefabPath = Path.Combine(paths.ExportedProjectAssetsPath, "res", "uisteam", "panel_prefabs", "setting", "SettingSlider_PCunit.prefab");
+        var keybindPrefabPath = Path.Combine(paths.ExportedProjectAssetsPath, "res", "uisteam", "panel_prefabs", "setting", "SettingKeyChange_PCunit.prefab");
+        var carouselPrefabPath = Path.Combine(paths.ExportedProjectAssetsPath, "res", "uisteam", "panel_prefabs", "setting", "SettingMutiClickGrop_PCunitGraphic.prefab");
+
+        if (!File.Exists(panelPrefabPath))
+            throw new FileNotFoundException($"Panel prefab not found: {panelPrefabPath}");
+
+        Console.WriteLine($"Loading prefab: {panelPrefabPath}");
+        var document = UnityPrefabLoader.Load(panelPrefabPath);
+        Console.WriteLine($"  -> {document.GameObjects.Count} GameObjects, {document.Components.Count} components");
+
+        var row = RowStyleExtractor.Extract(document, assetNameResolver);
+        var tab = TabStyleExtractor.Extract(document, assetNameResolver);
+
+        DropdownRawStyle? dropdown = null;
+        if (File.Exists(dropdownPrefabPath))
+        {
+            Console.WriteLine($"Loading dropdown prefab: {dropdownPrefabPath}");
+            var dropdownDocument = UnityPrefabLoader.Load(dropdownPrefabPath);
+            Console.WriteLine($"  -> {dropdownDocument.GameObjects.Count} GameObjects, {dropdownDocument.Components.Count} components");
+            dropdown = DropdownStyleExtractor.Extract(dropdownDocument, assetNameResolver);
+        }
+        else
+        {
+            Console.WriteLine($"Dropdown prefab not found: {dropdownPrefabPath}");
+        }
+
+        SwitchRawStyle? switchStyle = null;
+        if (File.Exists(switchPrefabPath))
+        {
+            Console.WriteLine($"Loading switch prefab: {switchPrefabPath}");
+            var switchDocument = UnityPrefabLoader.Load(switchPrefabPath);
+            Console.WriteLine($"  -> {switchDocument.GameObjects.Count} GameObjects, {switchDocument.Components.Count} components");
+            switchStyle = SwitchStyleExtractor.Extract(switchDocument, assetNameResolver);
+        }
+        else
+        {
+            Console.WriteLine($"Switch prefab not found: {switchPrefabPath}");
+        }
+
+        var outputDir = paths.OutputPath;
+        Directory.CreateDirectory(outputDir);
+
+        if (dropdown is null)
+            throw new InvalidOperationException("Dropdown style could not be extracted.");
+
+        if (switchStyle is null)
+            throw new InvalidOperationException("Switch style could not be extracted.");
+
+        SliderRawStyle? slider = null;
+        if (File.Exists(sliderPrefabPath))
+        {
+            Console.WriteLine($"Loading slider prefab: {sliderPrefabPath}");
+            var sliderDocument = UnityPrefabLoader.Load(sliderPrefabPath);
+            Console.WriteLine($"  -> {sliderDocument.GameObjects.Count} GameObjects, {sliderDocument.Components.Count} components");
+            slider = SliderStyleExtractor.Extract(sliderDocument, assetNameResolver);
+        }
+        else
+        {
+            Console.WriteLine($"Slider prefab not found: {sliderPrefabPath}");
+        }
+
+        if (slider is null)
+            throw new InvalidOperationException("Slider style could not be extracted.");
+
+        KeybindButtonRawStyle? keybind = null;
+        if (File.Exists(keybindPrefabPath))
+        {
+            Console.WriteLine($"Loading keybind prefab: {keybindPrefabPath}");
+            var keybindDocument = UnityPrefabLoader.Load(keybindPrefabPath);
+            Console.WriteLine($"  -> {keybindDocument.GameObjects.Count} GameObjects, {keybindDocument.Components.Count} components");
+            keybind = KeybindButtonStyleExtractor.Extract(keybindDocument, assetNameResolver);
+        }
+        else
+        {
+            Console.WriteLine($"Keybind prefab not found: {keybindPrefabPath}");
+        }
+
+        if (keybind is null)
+            throw new InvalidOperationException("Keybind button style could not be extracted.");
+
+        CarouselRawStyle? carousel = null;
+        if (File.Exists(carouselPrefabPath))
+        {
+            Console.WriteLine($"Loading carousel prefab: {carouselPrefabPath}");
+            var carouselDocument = UnityPrefabLoader.Load(carouselPrefabPath);
+            Console.WriteLine($"  -> {carouselDocument.GameObjects.Count} GameObjects, {carouselDocument.Components.Count} components");
+            carousel = CarouselStyleExtractor.Extract(carouselDocument, assetNameResolver);
+        }
+        else
+        {
+            Console.WriteLine($"Carousel prefab not found: {carouselPrefabPath}");
+        }
+
+        if (carousel is null)
+            throw new InvalidOperationException("Carousel style could not be extracted.");
+
+        var legacyFactoryPath = Path.Combine(outputDir, "PrefabStyleFactory.cs");
+        if (File.Exists(legacyFactoryPath))
+            File.Delete(legacyFactoryPath);
+
+        var rowFactoryPath = Path.Combine(outputDir, "RowStyleFactory.cs");
+        var dropdownFactoryPath = Path.Combine(outputDir, "DropdownStyleFactory.cs");
+        var switchFactoryPath = Path.Combine(outputDir, "SwitchStyleFactory.cs");
+        var sliderFactoryPath = Path.Combine(outputDir, "SliderStyleFactory.cs");
+        var keybindFactoryPath = Path.Combine(outputDir, "KeybindButtonStyleFactory.cs");
+        var carouselFactoryPath = Path.Combine(outputDir, "CarouselStyleFactory.cs");
+        var inputFactoryPath = Path.Combine(outputDir, "InputStyleFactory.cs");
+        var tabFactoryPath = Path.Combine(outputDir, "TabStyleFactory.cs");
+        CSharpFileWriter.WriteRowStyleFactory(rowFactoryPath, row);
+        CSharpFileWriter.WriteDropdownStyleFactory(dropdownFactoryPath, dropdown);
+        CSharpFileWriter.WriteSwitchStyleFactory(switchFactoryPath, switchStyle);
+        CSharpFileWriter.WriteSliderStyleFactory(sliderFactoryPath, slider);
+        CSharpFileWriter.WriteKeybindButtonStyleFactory(keybindFactoryPath, keybind);
+        CSharpFileWriter.WriteCarouselStyleFactory(carouselFactoryPath, carousel);
+        CSharpFileWriter.WriteInputStyleFactory(inputFactoryPath);
+        CSharpFileWriter.WriteTabStyleFactory(tabFactoryPath, tab);
+        Console.WriteLine($"Wrote {rowFactoryPath}");
+        Console.WriteLine($"Wrote {dropdownFactoryPath}");
+        Console.WriteLine($"Wrote {switchFactoryPath}");
+        Console.WriteLine($"Wrote {sliderFactoryPath}");
+        Console.WriteLine($"Wrote {keybindFactoryPath}");
+        Console.WriteLine($"Wrote {carouselFactoryPath}");
+        Console.WriteLine($"Wrote {inputFactoryPath}");
+    }
+}
