@@ -43,7 +43,7 @@ public class Plugin : BasePlugin
             Section: "EmberConfig",
             Key: "TabWidthScaling",
             DefaultValue: (int)EmberConfigSettings.DefaultTabWidthScaling,
-            Description: "Tab width as a percentage of the auto-calculated base width (viewport / native tabs).",
+            Description: "Tab width scaling in percent, based on vanilla tab width.",
             Label: "Tab Width Scaling",
             Tab: "EmberConfig",
             Group: "EmberConfig",
@@ -65,8 +65,22 @@ public class Plugin : BasePlugin
                 EmberConfigSettings.MaxTabScrollAnimationDuration),
             OnValueChanged: v => EmberConfigSettings.TabScrollAnimationDuration = v));
 
+        var tabMinFontSize = SettingsMenu.Register(Config, new SettingOptions<float>(
+            Section: "EmberConfig",
+            Key: "TabMinFontSize",
+            DefaultValue: EmberConfigSettings.DefaultTabMinFontSize,
+            Description: "Smallest font size tab labels are allowed to shrink to before being truncated.",
+            Label: "Tab Min Font Size",
+            Tab: "EmberConfig",
+            Group: "EmberConfig",
+            AcceptableValues: new AcceptableValueRange<float>(
+                EmberConfigSettings.MinTabMinFontSize,
+                EmberConfigSettings.MaxTabMinFontSize),
+            OnValueChanged: v => EmberConfigSettings.TabMinFontSize = v));
+
         EmberConfigSettings.TabScrollSensitivity = tabScrollSensitivity.Value;
         EmberConfigSettings.TabWidthScaling = tabWidthScaling.Value;
         EmberConfigSettings.TabScrollAnimationDuration = tabScrollAnimationDuration.Value;
+        EmberConfigSettings.TabMinFontSize = tabMinFontSize.Value;
     }
 }

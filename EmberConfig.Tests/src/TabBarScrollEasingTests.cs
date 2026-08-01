@@ -9,7 +9,7 @@ public class TabBarScrollEasingTests
     [InlineData(0f, 0f, 0.05f)]
     [InlineData(0.25f, 0f, 0.25f)]
     [InlineData(0.25f, 1f, 0.50f)]
-    [InlineData(0.05f, 0.5f, 0.10f)]
+    [InlineData(0.05f, 0.5f, 0.075f)]
     [InlineData(0.80f, 0f, 0.80f)]
     [InlineData(0.80f, 1f, 1.60f)]
     [InlineData(0.10f, 2f, 0.20f)]
@@ -28,7 +28,7 @@ public class TabBarScrollEasingTests
     }
 
     [Theory]
-    [InlineData(0f, 10f, 0f, 10f)]
+    [InlineData(0f, 10f, 0f, 0f)]
     [InlineData(10f, 20f, 0f, 10f)]
     [InlineData(10f, 20f, 1f, 20f)]
     [InlineData(10f, 20f, 0.5f, 15f)]

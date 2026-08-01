@@ -49,6 +49,10 @@ internal class DropdownRow : SettingRowBase
                     dropdown.captionText = label;
             }
 
+            var guard = dropdown.gameObject.GetComponent<DropdownCaptionGuard>()
+                ?? dropdown.gameObject.AddComponent<DropdownCaptionGuard>();
+            guard.SetDropdown(dropdown);
+
             AttachClickSound(dropdown);
         }
     }

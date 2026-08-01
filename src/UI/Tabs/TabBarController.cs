@@ -101,6 +101,7 @@ internal sealed class TabBarController
         visuals.Initialize(style, buttons);
         navigator.Initialize(buttons, style, index => SelectTab(index));
         EmberConfigSettings.TabWidthScalingChanged += OnTabWidthScalingChanged;
+        EmberConfigSettings.TabMinFontSizeChanged += OnTabMinFontSizeChanged;
         view.HideSourceTabs();
     }
 
@@ -171,9 +172,19 @@ internal sealed class TabBarController
         view.RefreshSize();
     }
 
+    private void OnTabMinFontSizeChanged(float _)
+    {
+        if (!view.IsReady || !style.HasValue)
+            return;
+
+        ApplyTabWidth(EmberConfigSettings.TabWidthScaling);
+        view.RefreshSize();
+    }
+
     public void Reset()
     {
         EmberConfigSettings.TabWidthScalingChanged -= OnTabWidthScalingChanged;
+        EmberConfigSettings.TabMinFontSizeChanged -= OnTabMinFontSizeChanged;
         view.Reset();
         buttons.Clear();
         scroll.Reset();

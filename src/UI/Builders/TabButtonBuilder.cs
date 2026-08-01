@@ -1,5 +1,7 @@
 namespace EmberConfig.UI;
 
+using System;
+using EmberConfig;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -25,8 +27,10 @@ internal static class TabButtonBuilder
         _ = go.AddComponent<CanvasRenderer>();
 
         // Invisible hit target for the whole tab. The M1Toggle will receive clicks here.
+        // It needs a real sprite so the GraphicRaycaster has geometry to hit.
         var hitImage = go.AddComponent<Image>();
-        hitImage.sprite = null;
+        hitImage.sprite = UIResources.WhiteSprite;
+        hitImage.type = Image.Type.Simple;
         hitImage.color = Color.clear;
         hitImage.raycastTarget = true;
 
@@ -65,10 +69,12 @@ internal static class TabButtonBuilder
         var typeNameText = RowElementBuilder.AddText(typeNameObj, tabStyle.Unselected, label);
         typeNameText.raycastTarget = false;
         typeNameText.enableWordWrapping = false;
-        typeNameText.enableAutoSizing = true;
-        typeNameText.overflowMode = TextOverflowModes.Ellipsis;
-        typeNameText.fontSizeMin = 10f;
+        typeNameText.enableAutoSizing = false;
+        typeNameText.autoSizeTextContainer = false;
+        typeNameText.overflowMode = TextOverflowModes.Truncate;
+        typeNameText.fontSizeMin = EmberConfigSettings.TabMinFontSize;
         typeNameText.fontSizeMax = tabStyle.Unselected.FontSize > 0f ? tabStyle.Unselected.FontSize : 30f;
+        typeNameText.fontSize = typeNameText.fontSizeMax;
 
         rect.sizeDelta = new Vector2(tabStyle.Width, tabStyle.Height);
         layout.minWidth = tabStyle.Width;
@@ -82,5 +88,49 @@ internal static class TabButtonBuilder
 
         go.SetActive(true);
         return toggle;
+    }
+
+    /// <summary>
+    /// Uses TMP's auto-size to find the largest font that fits the tab, then
+    /// locks that size and clips anything that still overflows. Ellipsis cannot
+    /// be used because the vanilla font asset does not contain the ellipsis glyph.
+    /// </summary>
+    internal static void FitText(TextMeshProUGUI text, float availableWidth)
+    {
+        if (text is null)
+            return;
+
+        _ = availableWidth;
+
+        text.enableWordWrapping = false;
+        text.autoSizeTextContainer = false;
+
+        float min = text.fontSizeMin;
+        float max = text.fontSizeMax;
+        if (min <= 0f || max <= 0f || min >= max)
+        {
+            text.ForceMeshUpdate(true);
+            return;
+        }
+
+        text.overflowMode = TextOverflowModes.Overflow;
+        text.enableAutoSizing = true;
+        text.fontSize = max;
+        text.fontSizeMin = min;
+        text.fontSizeMax = max;
+
+        // Force TMP to run auto-size against the current RectTransform width.
+        text.ForceMeshUpdate(true);
+
+        float fitted = text.fontSize;
+        if (fitted < min)
+            fitted = min;
+        else if (fitted > max)
+            fitted = max;
+
+        text.enableAutoSizing = false;
+        text.fontSize = fitted;
+        text.overflowMode = TextOverflowModes.Truncate;
+        text.ForceMeshUpdate(true);
     }
 }

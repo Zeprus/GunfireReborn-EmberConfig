@@ -129,7 +129,6 @@ public class SettingsMenuManager : MonoBehaviour, UI.IKeybindRowServices
         {
             uiFinder.Initialize(panelTracker.PanelRoot);
             tabManager!.OnUIReady();
-            VanillaSliderInputPatcher.Patch(uiFinder);
         }
         catch (Exception ex)
         {
@@ -230,5 +229,6 @@ public class SettingsMenuManager : MonoBehaviour, UI.IKeybindRowServices
     {
         ClassInjector.RegisterTypeInIl2Cpp<SettingsPanelStateListener>();
         ClassInjector.RegisterTypeInIl2Cpp<RowHoverHandler>();
+        ClassInjector.RegisterTypeInIl2Cpp<DropdownCaptionGuard>();
     }
 }

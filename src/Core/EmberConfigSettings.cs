@@ -21,11 +21,16 @@ public static class EmberConfigSettings
 
     public const float MinTabScrollAnimationDuration = 0.05f;
     public const float MaxTabScrollAnimationDuration = 0.80f;
-    public const float DefaultTabScrollAnimationDuration = 0.25f;
+    public const float DefaultTabScrollAnimationDuration = 0.5f;
+
+    public const float MinTabMinFontSize = 6f;
+    public const float MaxTabMinFontSize = 30f;
+    public const float DefaultTabMinFontSize = 15f;
 
     private static float tabScrollSensitivity = DefaultTabScrollSensitivity;
     private static float tabWidthScaling = DefaultTabWidthScaling;
     private static float tabScrollAnimationDuration = DefaultTabScrollAnimationDuration;
+    private static float tabMinFontSize = DefaultTabMinFontSize;
 
     /// <summary>
     /// Gets or sets how fast the tab list scrolls when the mouse wheel is used.
@@ -82,6 +87,26 @@ public static class EmberConfigSettings
     }
 
     /// <summary>
+    /// Gets or sets the smallest font size tab labels are allowed to shrink to
+    /// before overflowing with an ellipsis. Configurable so users can decide
+    /// how aggressively labels are allowed to compress.
+    /// Values are clamped to <see cref="MinTabMinFontSize"/> and <see cref="MaxTabMinFontSize"/>.
+    /// </summary>
+    public static float TabMinFontSize
+    {
+        get => tabMinFontSize;
+        set
+        {
+            value = Clamp(value, MinTabMinFontSize, MaxTabMinFontSize);
+            if (Abs(value - tabMinFontSize) < 0.0001f)
+                return;
+
+            tabMinFontSize = value;
+            TabMinFontSizeChanged?.Invoke(value);
+        }
+    }
+
+    /// <summary>
     /// Fired whenever <see cref="TabScrollSensitivity"/> changes.
     /// </summary>
     public static event Action<float>? TabScrollSensitivityChanged;
@@ -95,6 +120,11 @@ public static class EmberConfigSettings
     /// Fired whenever <see cref="TabScrollAnimationDuration"/> changes.
     /// </summary>
     public static event Action<float>? TabScrollAnimationDurationChanged;
+
+    /// <summary>
+    /// Fired whenever <see cref="TabMinFontSize"/> changes.
+    /// </summary>
+    public static event Action<float>? TabMinFontSizeChanged;
 
     /// <summary>
     /// Applies the current <see cref="TabScrollSensitivity"/> to a <see cref="ScrollRect"/>.

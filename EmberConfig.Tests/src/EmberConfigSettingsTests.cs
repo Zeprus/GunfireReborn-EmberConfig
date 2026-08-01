@@ -117,10 +117,10 @@ public class EmberConfigSettingsTests
         float? captured = null;
         EmberConfigSettings.TabScrollAnimationDurationChanged += v => captured = v;
 
-        EmberConfigSettings.TabScrollAnimationDuration = 0.5f;
+        EmberConfigSettings.TabScrollAnimationDuration = 0.25f;
 
         Assert.NotNull(captured);
-        Assert.Equal(0.5f, captured.Value, precision: 5);
+        Assert.Equal(0.25f, captured.Value, precision: 5);
     }
 
     [Fact]

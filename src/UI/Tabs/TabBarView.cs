@@ -205,6 +205,37 @@ internal sealed class TabBarView
             if (checkmark is not null)
                 checkmark.sizeDelta = new Vector2(width, checkmark.sizeDelta.y);
         }
+
+        // Update the layout so each tab's RectTransform has its final size
+        // before we decide whether the label fits or needs truncating.
+        LayoutRebuilder.ForceRebuildLayoutImmediate(content);
+        Canvas.ForceUpdateCanvases();
+
+        for (int i = 0; i < content.childCount; i++)
+        {
+            var child = content.GetChild(i);
+            if (child is null || child.GetComponent<M1Toggle>() is null)
+                continue;
+
+            var typeNameObj = child.Find("type_name");
+            var typeName = typeNameObj?.GetComponent<TextMeshProUGUI>();
+            var typeNameRect = typeNameObj?.GetComponent<RectTransform>();
+            if (typeName is not null && typeNameRect is not null)
+            {
+                // Ensure the label's own RectTransform is exactly the tab size.
+                // TMP's auto-size text container sometimes expands the label object,
+                // which breaks both fitting and clipping.
+                typeNameRect.anchorMin = Vector2.zero;
+                typeNameRect.anchorMax = Vector2.one;
+                typeNameRect.pivot = new Vector2(0.5f, 0.5f);
+                typeNameRect.anchoredPosition = Vector2.zero;
+                typeNameRect.sizeDelta = Vector2.zero;
+                typeName.autoSizeTextContainer = false;
+
+                typeName.fontSizeMin = EmberConfigSettings.TabMinFontSize;
+                TabButtonBuilder.FitText(typeName, width);
+            }
+        }
     }
 
     public void HideSourceTabs()
@@ -225,7 +256,8 @@ internal sealed class TabBarView
             return;
 
         var image = viewport.GetComponent<Image>() ?? viewport.gameObject.AddComponent<Image>();
-        image.sprite = null;
+        image.sprite = UIResources.WhiteSprite;
+        image.type = Image.Type.Simple;
         image.color = Color.clear;
         image.raycastTarget = true;
     }

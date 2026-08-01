@@ -126,6 +126,7 @@ internal class SliderRow : SettingRowBase
             clamped = Convert.ToInt32(clamped);
 
         slider.value = clamped;
+        valueInput.text = FormatValue();
     }
 
     private void SetValueText()
