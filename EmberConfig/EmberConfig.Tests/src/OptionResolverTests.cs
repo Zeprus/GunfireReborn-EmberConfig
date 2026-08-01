@@ -78,7 +78,7 @@ public class OptionResolverTests
         var config = NewConfig();
         var description = acceptable is not null ? new ConfigDescription("", acceptable) : null;
         var setting = config.Bind("test", key, value, description);
-        return new SettingEntry<T>(key, setting, "Label", new SettingLocation("Tab", "Group"));
+        return new SettingEntry<T>(key, setting, "Label", "TestMod", new SettingLocation("Tab", "Group"));
     }
 
     private enum TestEnum { A, B }

@@ -96,6 +96,7 @@ internal sealed class SettingsInjector
             var sorted = registry
                 .GetByTab(tab)
                 .ToList()
+                .Where(entry => !VisibilityStore.IsInitialized || VisibilityStore.Current.IsVisible(entry.ModName, tab))
                 .Select((entry, index) => (entry, index))
                 .OrderBy(x => x.entry.Location.Group ?? string.Empty, StringComparer.OrdinalIgnoreCase)
                 .ThenBy(x => x.entry.Location.Group is null ? string.Empty : (x.entry.Location.SubGroup ?? string.Empty), StringComparer.OrdinalIgnoreCase)
@@ -194,7 +195,7 @@ internal sealed class SettingsInjector
         if (!string.Equals(currentSubGroup, loc.SubGroup, StringComparison.OrdinalIgnoreCase))
         {
             if (loc.SubGroup is not null && !string.IsNullOrWhiteSpace(loc.Group))
-                groupBuilder.EnsureSubGroupHeader(currentGroupContainer ?? content, loc.Group, loc.SubGroup);
+                groupBuilder.EnsureSubGroupHeader(currentGroupContainer ?? content, loc.Group, loc.SubGroup, noIndent: loc is { Tab: VisibilityStore.VisibilityTab, Group: VisibilityStore.VisibilityGroup });
 
             currentSubGroup = loc.SubGroup;
         }

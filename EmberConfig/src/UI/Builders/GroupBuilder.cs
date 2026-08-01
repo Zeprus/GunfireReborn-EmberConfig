@@ -57,7 +57,8 @@ internal sealed class GroupBuilder
     /// <param name="groupContainer">The parent group container.</param>
     /// <param name="group">The group name.</param>
     /// <param name="subGroup">The sub-group name.</param>
-    public void EnsureSubGroupHeader(Transform groupContainer, string group, string subGroup)
+    /// <param name="noIndent">When true, the sub-group text is rendered without leading spaces.</param>
+    public void EnsureSubGroupHeader(Transform groupContainer, string group, string subGroup, bool noIndent = false)
     {
         if (!createdSubHeaders.Add(GetSubGroupHeaderKey(groupContainer, group, subGroup))) return;
 
@@ -72,7 +73,8 @@ internal sealed class GroupBuilder
 
         go.AddComponent<CanvasRenderer>();
         var text = go.AddComponent<TextMeshProUGUI>();
-        TextAppearanceApplier.Apply(text, groupStyle.Header, $"    {subGroup}", TextAlignmentOptions.Left);
+        var displayText = noIndent ? subGroup : $"    {subGroup}";
+        TextAppearanceApplier.Apply(text, groupStyle.Header, displayText, TextAlignmentOptions.Left);
 
         var layout = go.AddComponent<LayoutElement>();
         layout.preferredHeight = groupStyle.SubGroupHeaderHeight;

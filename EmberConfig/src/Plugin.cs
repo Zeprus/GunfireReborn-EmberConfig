@@ -19,6 +19,7 @@ public class Plugin : BasePlugin
     {
         Logger = base.Log;
         SettingsRegistry.Current = new SettingsRegistry();
+        VisibilityStore.Initialize(Config);
         RegisterEmberConfigSettings();
         AddComponent<SettingsMenuManager>();
         Logger.LogInfo($"{MyPluginInfo.PLUGIN_NAME} loaded");
@@ -34,6 +35,7 @@ public class Plugin : BasePlugin
             Label: "Tab Scroll Sensitivity",
             Tab: "EmberConfig",
             Group: "EmberConfig",
+            ModName: "EmberConfig",
             AcceptableValues: new AcceptableValueRange<float>(
                 EmberConfigSettings.MinTabScrollSensitivity,
                 EmberConfigSettings.MaxTabScrollSensitivity),
@@ -47,6 +49,7 @@ public class Plugin : BasePlugin
             Label: "Tab Width Scaling",
             Tab: "EmberConfig",
             Group: "EmberConfig",
+            ModName: "EmberConfig",
             AcceptableValues: new AcceptableValueRange<int>(
                 (int)EmberConfigSettings.MinTabWidthScaling,
                 (int)EmberConfigSettings.MaxTabWidthScaling),
@@ -60,6 +63,7 @@ public class Plugin : BasePlugin
             Label: "Tab Scroll Animation Duration",
             Tab: "EmberConfig",
             Group: "EmberConfig",
+            ModName: "EmberConfig",
             AcceptableValues: new AcceptableValueRange<float>(
                 EmberConfigSettings.MinTabScrollAnimationDuration,
                 EmberConfigSettings.MaxTabScrollAnimationDuration),
@@ -73,6 +77,7 @@ public class Plugin : BasePlugin
             Label: "Tab Min Font Size",
             Tab: "EmberConfig",
             Group: "EmberConfig",
+            ModName: "EmberConfig",
             AcceptableValues: new AcceptableValueRange<float>(
                 EmberConfigSettings.MinTabMinFontSize,
                 EmberConfigSettings.MaxTabMinFontSize),

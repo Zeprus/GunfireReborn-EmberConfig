@@ -18,6 +18,9 @@ public interface ISettingEntry
     /// <summary>The display label for the row.</summary>
     string Label { get; }
 
+    /// <summary>The mod that owns this row.</summary>
+    string ModName { get; }
+
     /// <summary>The description shown on hover.</summary>
     string Description => Config.Description?.Description ?? string.Empty;
 

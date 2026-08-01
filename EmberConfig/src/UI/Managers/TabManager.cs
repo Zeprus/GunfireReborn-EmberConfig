@@ -130,7 +130,7 @@ public sealed class TabManager
             .ToList();
 
         var custom = all
-            .Where(t => !NativeTabResolver.IsNativeTab(t))
+            .Where(t => !NativeTabResolver.IsNativeTab(t) && (IsAlwaysVisibleTab(t) || HasVisibleEntries(t)))
             .OrderBy(t => t, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
@@ -214,6 +214,8 @@ public sealed class TabManager
                 LayoutRebuilder.ForceRebuildLayoutImmediate(rect);
         }
 
+        RemoveHiddenCustomTabs();
+
         if (uiFinder.TabSwitch is not null && tabBar.Content is not null)
         {
             tabBar.Rebuild();
@@ -226,6 +228,46 @@ public sealed class TabManager
         {
             Plugin.Logger?.LogWarning($"TabManager.FinalizeLayout skipped: TabSwitch={(uiFinder.TabSwitch != null)}, Content={(tabBar.Content != null)}");
         }
+    }
+
+    private static bool IsAlwaysVisibleTab(string tab) =>
+        string.Equals(tab, VisibilityStore.VisibilityTab, StringComparison.OrdinalIgnoreCase);
+
+    private static bool HasVisibleEntries(string tab)
+    {
+        var registry = SettingsRegistry.Current;
+        if (registry is null)
+            return false;
+
+        return registry.GetByTab(tab).Any(entry =>
+            !VisibilityStore.IsInitialized || VisibilityStore.Current.IsVisible(entry.ModName, tab));
+    }
+
+    private void RemoveHiddenCustomTabs()
+    {
+        var visibleTabs = new HashSet<string>(GetOrderedTabNames(), StringComparer.OrdinalIgnoreCase);
+
+        foreach (var tab in customTabs.All.ToList())
+        {
+            if (!customTabs.TryGetName(tab.Toggle, out var tabName) || !visibleTabs.Contains(tabName))
+                RemoveCustomTab(tabName ?? tab.Toggle.gameObject.name);
+        }
+    }
+
+    private void RemoveCustomTab(string tabName)
+    {
+        var normalized = Normalize(tabName);
+        if (!customTabs.TryGet(normalized, out var tab))
+            return;
+
+        tab.Toggle.gameObject.SetActive(false);
+        tab.Toggle.transform.SetParent(null, false);
+        tab.Content.gameObject.SetActive(false);
+        tab.Content.SetParent(null, false);
+
+        UnityEngine.Object.Destroy(tab.Toggle.gameObject);
+        UnityEngine.Object.Destroy(tab.Content.gameObject);
+        customTabs.Unregister(normalized);
     }
 
     private static string Normalize(string name) => name?.Trim() ?? string.Empty;

@@ -26,6 +26,8 @@ public static class SettingsMenu
             throw new ArgumentNullException(nameof(configFile));
         if (options is null)
             throw new ArgumentNullException(nameof(options));
+        if (string.IsNullOrWhiteSpace(options.ModName))
+            throw new ArgumentException("ModName cannot be empty.", nameof(options));
         if (typeof(T) == typeof(KeyCode))
             throw new ArgumentException("KeyCode settings must be registered with RegisterKeybind.", nameof(options));
 
@@ -50,14 +52,18 @@ public static class SettingsMenu
             throw new ArgumentNullException(nameof(config));
         if (options is null)
             throw new ArgumentNullException(nameof(options));
+        if (string.IsNullOrWhiteSpace(options.ModName))
+            throw new ArgumentException("ModName cannot be empty.", nameof(options));
         if (typeof(T) == typeof(KeyCode))
             throw new ArgumentException("KeyCode settings must be registered with RegisterKeybind.", nameof(config));
 
         var location = CreateLocation(options.Tab, options.Group, options.SubGroup);
         var id = Guid.NewGuid().ToString("N");
-        var entry = new SettingEntry<T>(id, config, options.Label, location, options.OnValueChanged, options.ControlStyle, options.SwitchLabels);
+        var entry = new SettingEntry<T>(id, config, options.Label, options.ModName, location, options.OnValueChanged, options.ControlStyle, options.SwitchLabels);
 
         SettingsRegistry.Current.Register(entry);
+        if (VisibilityStore.IsInitialized)
+            VisibilityStore.Current.EnsureVisibilitySwitch(entry);
         return config;
     }
 
@@ -75,6 +81,8 @@ public static class SettingsMenu
             throw new ArgumentNullException(nameof(configFile));
         if (options is null)
             throw new ArgumentNullException(nameof(options));
+        if (string.IsNullOrWhiteSpace(options.ModName))
+            throw new ArgumentException("ModName cannot be empty.", nameof(options));
         if (string.IsNullOrWhiteSpace(options.Key))
             throw new ArgumentException("Key cannot be empty.", nameof(options));
 
@@ -103,14 +111,18 @@ public static class SettingsMenu
             throw new ArgumentNullException(nameof(primary));
         if (options is null)
             throw new ArgumentNullException(nameof(options));
+        if (string.IsNullOrWhiteSpace(options.ModName))
+            throw new ArgumentException("ModName cannot be empty.", nameof(options));
         if (string.IsNullOrWhiteSpace(options.Label))
             throw new ArgumentException("Label cannot be empty.", nameof(options));
 
         var location = CreateLocation(options.Tab, options.Group, options.SubGroup);
         var id = Guid.NewGuid().ToString("N");
-        var entry = new KeybindEntry(id, primary, secondary, options.Label, location, options.OnPressed, options.OnReleased);
+        var entry = new KeybindEntry(id, primary, secondary, options.Label, options.ModName, location, options.OnPressed, options.OnReleased);
 
         SettingsRegistry.Current.Register(entry);
+        if (VisibilityStore.IsInitialized)
+            VisibilityStore.Current.EnsureVisibilitySwitch(entry);
         return new KeybindRegistration(primary, secondary);
     }
 

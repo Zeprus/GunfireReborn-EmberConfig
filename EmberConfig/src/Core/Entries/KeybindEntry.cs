@@ -11,6 +11,7 @@ public sealed class KeybindEntry : ISettingEntry, IKeybindEntry
     public ConfigEntry<KeyCode> Primary { get; }
     public ConfigEntry<KeyCode>? Secondary { get; }
     public string Label { get; }
+    public string ModName { get; }
     public SettingLocation Location { get; }
     public Action? OnPressed { get; }
     public Action? OnReleased { get; }
@@ -32,6 +33,7 @@ public sealed class KeybindEntry : ISettingEntry, IKeybindEntry
         ConfigEntry<KeyCode> primary,
         ConfigEntry<KeyCode>? secondary,
         string label,
+        string modName,
         SettingLocation location,
         Action? onPressed,
         Action? onReleased)
@@ -42,11 +44,14 @@ public sealed class KeybindEntry : ISettingEntry, IKeybindEntry
             throw new ArgumentNullException(nameof(primary));
         if (string.IsNullOrWhiteSpace(label))
             throw new ArgumentException("Label cannot be empty.", nameof(label));
+        if (string.IsNullOrWhiteSpace(modName))
+            throw new ArgumentException("ModName cannot be empty.", nameof(modName));
 
         Id = id;
         Primary = primary;
         Secondary = secondary;
         Label = label;
+        ModName = modName;
         Location = location;
         OnPressed = onPressed;
         OnReleased = onReleased;

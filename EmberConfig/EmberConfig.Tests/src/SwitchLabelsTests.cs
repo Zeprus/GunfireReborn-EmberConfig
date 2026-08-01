@@ -19,7 +19,7 @@ public class SwitchLabelsTests
         var setting = config.Bind("test", "key", true);
         var labels = new SwitchLabels("Show", "Hide");
 
-        var entry = new SettingEntry<bool>("id", setting, "Label", new SettingLocation("Tab", "Group"), null, SettingControlStyle.Switch, labels);
+        var entry = new SettingEntry<bool>("id", setting, "Label", "TestMod", new SettingLocation("Tab", "Group"), null, SettingControlStyle.Switch, labels);
 
         Assert.Equal(labels, entry.SwitchLabels);
     }
@@ -30,7 +30,7 @@ public class SwitchLabelsTests
         var config = NewConfig();
         var setting = config.Bind("test", "key", true);
 
-        var entry = new SettingEntry<bool>("id", setting, "Label", new SettingLocation("Tab", "Group"));
+        var entry = new SettingEntry<bool>("id", setting, "Label", "TestMod", new SettingLocation("Tab", "Group"));
 
         Assert.Null(entry.SwitchLabels);
     }

@@ -70,7 +70,8 @@ public static class EmberConfigCompatibility
             Description: "Master volume",
             Label: "Master Volume",
             Tab: SettingsTab.Audio.ToNativeName(),
-            Group: "My Mod");
+            Group: "My Mod",
+            ModName: "My Mod");
 
         SettingsMenu.Register(config, options);
     }
@@ -113,6 +114,7 @@ var options = new SettingOptions<float>(
     Label: "Master Volume",
     Tab: SettingsTab.Audio.ToNativeName(),
     Group: "My Mod",
+    ModName: "My Mod",
     AcceptableValues: new AcceptableValueRange<float>(0f, 1f),
     OnValueChanged: v => AudioListener.volume = v);
 
@@ -133,6 +135,7 @@ var dropdownOptions = new SettingOptions<string>(
     Label: "Difficulty",
     Tab: SettingsTab.GameSettings.ToNativeName(),
     Group: "My Mod",
+    ModName: "My Mod",
     AcceptableValues: new AcceptableValueList<string>("Easy", "Normal", "Hard"));
 
 var config = Config.Bind(dropdownOptions.Section, dropdownOptions.Key, dropdownOptions.DefaultValue,
@@ -152,6 +155,7 @@ var keybindOptions = new KeybindOptions(
     Label: "Toggle Overlay",
     Tab: SettingsTab.MouseKeyboard.ToNativeName(),
     Group: "My Mod",
+    ModName: "My Mod",
     OnPressed: () => overlay.SetActive(!overlay.activeSelf));
 
 SettingsMenu.RegisterKeybind(Config, keybindOptions);
@@ -167,7 +171,8 @@ var customOptions = new SettingOptions<bool>(
     Description: "Show the in-game FPS counter",
     Label: "Show FPS",
     Tab: "My Mod",
-    Group: "My Mod");
+    Group: "My Mod",
+    ModName: "My Mod");
 
 SettingsMenu.Register(Config, customOptions);
 ```
@@ -189,6 +194,7 @@ var switchOptions = new SettingOptions<bool>(
     Label: "Show Hints",
     Tab: SettingsTab.GameSettings.ToNativeName(),
     Group: "My Mod",
+    ModName: "My Mod",
     ControlStyle: SettingControlStyle.Switch,
     SwitchLabels: new SwitchLabels("Show", "Hide"));
 

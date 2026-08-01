@@ -116,7 +116,7 @@ public class RowTypeResolverTests
     {
         var config = NewConfig();
         var keybind = config.Bind("test", "key", KeyCode.A);
-        var entry = new KeybindEntry("id", keybind, null, "label", new SettingLocation("Tab", "Group"), null, null);
+        var entry = new KeybindEntry("id", keybind, null, "label", "TestMod", new SettingLocation("Tab", "Group"), null, null);
 
         Assert.Equal(RowType.Keybind, RowTypeResolver.Resolve(entry));
     }
@@ -126,7 +126,7 @@ public class RowTypeResolverTests
         var config = NewConfig();
         var description = acceptable is not null ? new ConfigDescription("", acceptable) : null;
         var setting = config.Bind("test", key, value, description);
-        return new SettingEntry<T>(key, setting, "Label", new SettingLocation("Tab", "Group"), null, controlStyle);
+        return new SettingEntry<T>(key, setting, "Label", "TestMod", new SettingLocation("Tab", "Group"), null, controlStyle);
     }
 
     private enum TestEnum { A, B }

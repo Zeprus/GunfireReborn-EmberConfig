@@ -66,6 +66,6 @@ public class SettingsRegistryTests
     {
         var config = NewConfig();
         var setting = config.Bind("test", id, "value");
-        return new SettingEntry<string>(id, setting, $"Label {id}", new SettingLocation(tab, group, subGroup));
+        return new SettingEntry<string>(id, setting, $"Label {id}", "TestMod", new SettingLocation(tab, group, subGroup));
     }
 }

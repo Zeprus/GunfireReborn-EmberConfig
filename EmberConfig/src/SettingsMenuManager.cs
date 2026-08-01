@@ -16,6 +16,11 @@ public class SettingsMenuManager : MonoBehaviour, UI.IKeybindRowServices
     public SettingsMenuManager(IntPtr ptr) : base(ptr) { }
 
     /// <summary>
+    /// Current manager instance, set in <see cref="Awake"/> and cleared in <see cref="OnDestroy"/>.
+    /// </summary>
+    public static SettingsMenuManager? Current { get; private set; }
+
+    /// <summary>
     /// Whether a keybind row is currently capturing input.
     /// </summary>
     public bool IsCapturing => injector?.IsCapturing ?? false;
@@ -35,6 +40,8 @@ public class SettingsMenuManager : MonoBehaviour, UI.IKeybindRowServices
     {
         try
         {
+            Current = this;
+
             DontDestroyOnLoad(gameObject);
 
             RegisterIl2CppTypes();
@@ -66,6 +73,8 @@ public class SettingsMenuManager : MonoBehaviour, UI.IKeybindRowServices
 
     private void OnDestroy()
     {
+        Current = null;
+
         if (panelTracker is not null)
         {
             panelTracker.Opened -= OnPanelOpened;
