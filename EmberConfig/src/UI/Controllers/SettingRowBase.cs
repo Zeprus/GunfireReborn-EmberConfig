@@ -58,15 +58,13 @@ internal abstract class SettingRowBase : ISettingRow
     protected abstract void OnRefresh();
     protected virtual void OnUnbind() { }
 
-    protected object? CurrentValue => Entry?.Config.BoxedValue;
-
-    protected void SetValue(object? value)
+    protected void SetValue(object? value, bool save = true)
     {
-        if (Entry is not null)
-            Entry.Config.BoxedValue = value;
+        if (Entry is null) return;
+        Entry.Config.BoxedValue = value;
+        if (save && Entry.Config?.ConfigFile is not null)
+            Entry.Config.ConfigFile.Save();
     }
-
-    protected T? GetValue<T>() => CurrentValue is T t ? t : default;
 
     protected static void SafeSetText(TextMeshProUGUI? text, string value)
     {

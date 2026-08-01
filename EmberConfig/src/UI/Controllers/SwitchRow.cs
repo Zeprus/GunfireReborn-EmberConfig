@@ -61,7 +61,7 @@ internal class SwitchRow : SettingRowBase
     {
         WwiseAudio.PostIfValid(clickSoundEventId, option1?.gameObject ?? GameObject);
 
-        if (isOn && Entry is not null)
-            Entry.Config.BoxedValue = isOption1;
+        if (isOn)
+            SetValue(isOption1, save: true);
     }
 }

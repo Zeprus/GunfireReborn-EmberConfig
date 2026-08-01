@@ -13,6 +13,7 @@ A standalone BepInEx 6 plugin for Gunfire Reborn that exposes a generic `Setting
 - **Dual-key keybinds** rendered with vanilla TMP sprite icons.
 - **Soft-dependency friendly** — consumer mods can reference EmberConfig without hard coupling.
 - **No vanilla savefile changes** — all values live in per-mod BepInEx `.cfg` files.
+- **Per-mod/tab visibility toggles** — hide or show an entire mod's rows per tab, with a Reset Visibility button.
 
 ## Requirements
 
@@ -89,6 +90,8 @@ All public API lives in the `EmberConfig.Public` namespace.
 - `SettingsMenu.Register<T>(ConfigEntry<T> config, SettingOptions<T> options)`
 - `SettingsMenu.RegisterKeybind(ConfigFile configFile, KeybindOptions options)`
 - `SettingsMenu.RegisterKeybind(ConfigEntry<KeyCode> primary, ConfigEntry<KeyCode>? secondary, KeybindOptions options)`
+
+`SettingOptions<T>` and `KeybindOptions` require a non-empty `ModName` and `Label` (or `Key` for keybinds). `ModName` is used to group settings and to drive the per-mod/tab visibility toggles.
 
 ## Two ways to register
 
@@ -202,3 +205,12 @@ var switchOptions = new SettingOptions<bool>(
 
 SettingsMenu.Register(Config, switchOptions);
 ```
+
+## Settings Visibility
+
+EmberConfig adds a `Settings Visibility` group inside the `EmberConfig` tab. For every unique `(ModName, Tab)` pair, a switch is created that toggles whether that mod's rows appear in that tab. Switches default to `On`.
+
+- Toggling a switch off performs a **targeted refresh**: only the affected mod's rows in the affected tab are hidden; custom tabs with no visible rows are removed.
+- Toggling a switch back on recreates the rows and tab.
+- The `Reset Visibility` button at the bottom of the `EmberConfig` tab deletes all `[Visibility]` config entries (including stale ones for removed mods) and restores every current mod's visibility to `On`.
+- Visibility is persisted in `BepInEx/config/zeprus.gunfire.EmberConfig.cfg` under the `[Visibility]` section.

@@ -232,6 +232,7 @@ SettingsMenuManager (MonoBehaviour)
 Core
   EmberConfigSettings     // static mod settings for tab scroll/width/font/animation
   SettingsRegistry      -> register + query ISettingEntry; get tabs and keybinds
+  VisibilityStore       -> per-mod/tab visibility toggles; creates sentinel SettingEntry<bool> rows; persists in [Visibility]
   SettingLocation       -> tab/optional group/optional sub-group value object
   SettingsPanelState    -> shared static state: IsCapturing, IsBlockingClose,
                            KeybindPanelRefreshed event
@@ -245,6 +246,7 @@ Core
 UI
   StyleFactoryController -> creates the StyleCatalog from generated prefab data + runtime captures
   UIResources           -> 1x1 white Sprite for raycast targets that have no visible image
+  UIStyleConstants      -> shared visual constants (e.g. destructive ColorBlock) used across UI components
 
 UI/Services
   UIFinder              -> lazy cached transforms / components by path; creates StyleFactoryController
@@ -253,6 +255,8 @@ UI/Services
   ToastManager          -> displays and hides the vanilla keybind toast
   WwiseAudio            -> helper for posting captured Wwise event IDs
   IKeybindRowServices   -> interface the manager implements so keybind rows can show toasts
+  NumberParser          -> parses numeric input with both invariant and current-culture fallbacks (e.g. "0.5" and "0,5")
+  ScrollPreserver       -> captures and restores ScrollRect position across rebuilds and visibility toggles
 
 UI/Resolvers
   RowTypeResolver       -> maps ISettingEntry to RowType (Switch, Slider, Dropdown, Carousel,
@@ -266,7 +270,7 @@ UI/Resolvers
 
 UI/Managers
   TabManager            -> native/custom tab lifecycle; M1Toggle integration; delegates to Tabs/ components
-  SettingsInjector      -> batched group/sub-group/row construction; calls RowFactory and GroupBuilder
+  SettingsInjector      -> batched group/sub-group/row construction; calls RowFactory, GroupBuilder and ResetButtonBuilder; handles targeted visibility refreshes
 
 UI/Factories
   RowFactory            -> maps SettingType/ControlStyle to RowType; resolves audio IDs; builds Transform
@@ -286,11 +290,12 @@ UI/Builders (pure GameObject construction, no logic or data binding)
   InputElementBuilder   -> Build(name, RowStyle, InputStyle?, parent) -> Transform
   TabButtonBuilder      -> custom tab button construction; consumed by CustomTabFactory
   VanillaComponentApplier -> attaches DYSelect, AkGameObj, and AkTriggerMouseClick to controls
+  ResetButtonBuilder    -> builds and maintains the "Reset Visibility" button/spacer in the EmberConfig tab
 
 UI/Controllers (row controllers with ConfigEntry two-way binding, implement ISettingRow)
   ISettingRow           -> Transform, Bind, Unbind, Refresh, Update, UpdateHover,
                            IsHovered, Description, IsCapturing
-  SettingRowBase        -> Bind/Unbind/Refresh lifecycle; cached ValueChanged delegate
+  SettingRowBase        -> Bind/Unbind/Refresh lifecycle; SetValue helper for consistent BoxedValue persistence and ConfigFile.Save
   KeybindRow            -> binds a KeybindEntry; uses KeybindCaptureController and KeybindCoverMask
   KeybindCaptureController -> polls input and drives the WaitRelease/WaitPress/ReleaseNextFrame state machine
   KeybindCoverMask      -> manages the vanilla covery_mask during keybind capture
@@ -322,6 +327,7 @@ UI/Tabs (custom tab bar support)
 UI
   StyleFactoryController -> creates the StyleCatalog from generated prefab data + runtime captures
   UIResources           -> 1x1 white Sprite for raycast targets that have no visible image
+  UIStyleConstants      -> shared visual constants (e.g. destructive ColorBlock) used across UI components
   StyleCatalog          -> data container for Row, Tab, GroupHeader, KeybindButton, Slider, Switch,
                            Dropdown, Carousel and Input styles
   TextAppearance        -> shared value object: font, material, fontSize, fontSizeMin/Max,
@@ -452,9 +458,11 @@ EmberConfig/
 │   │   │       ├── RebuildCoordinator.cs
 │   │   │       ├── SettingsPanelState.cs
 │   │   │       ├── SettingsPanelStateListener.cs
-│   │   │       └── TransformFinder.cs
+│   │   │       ├── TransformFinder.cs
+│   │   │       └── VisibilityStore.cs
 │   │   ├── UI/
 │   │   │   ├── UIResources.cs
+│   │   │   ├── UIStyleConstants.cs
 │   │   │   ├── StyleFactoryController.cs
 │   │   │   ├── Resolvers/
 │   │   │   │   ├── RowTypeResolver.cs
@@ -470,7 +478,9 @@ EmberConfig/
 │   │   │   │   ├── PanelLocator.cs
 │   │   │   │   ├── ToastManager.cs
 │   │   │   │   ├── WwiseAudio.cs
-│   │   │   │   └── IKeybindRowServices.cs
+│   │   │   │   ├── IKeybindRowServices.cs
+│   │   │   │   ├── NumberParser.cs
+│   │   │   │   └── ScrollPreserver.cs
 │   │   │   ├── Managers/
 │   │   │   │   ├── TabManager.cs
 │   │   │   │   └── SettingsInjector.cs
@@ -489,7 +499,8 @@ EmberConfig/
 │   │   │   │   ├── CarouselElementBuilder.cs
 │   │   │   │   ├── InputElementBuilder.cs
 │   │   │   │   ├── TabButtonBuilder.cs
-│   │   │   │   └── VanillaComponentApplier.cs
+│   │   │   │   ├── VanillaComponentApplier.cs
+│   │   │   │   └── ResetButtonBuilder.cs
 │   │   │   ├── Controllers/
 │   │   │   │   ├── ISettingRow.cs
 │   │   │   │   ├── SettingRowBase.cs

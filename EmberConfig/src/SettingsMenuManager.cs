@@ -35,6 +35,7 @@ public class SettingsMenuManager : MonoBehaviour, UI.IKeybindRowServices
     private RowFactory? rowFactory;
     private SettingsInjector? injector;
     private InputDispatcher? inputDispatcher;
+    private Harmony? harmony;
 
     private string? preRebuildActiveTab;
     private float preRebuildScrollPosition = 1f;
@@ -65,7 +66,8 @@ public class SettingsMenuManager : MonoBehaviour, UI.IKeybindRowServices
             registry.EntryRegistered += OnEntryRegistered;
             SettingsPanelState.KeybindPanelRefreshed += OnKeybindPanelRefreshed;
 
-            new Harmony(MyPluginInfo.PLUGIN_GUID).PatchAll();
+            harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
+            harmony.PatchAll();
         }
         catch (Exception ex)
         {
@@ -91,11 +93,13 @@ public class SettingsMenuManager : MonoBehaviour, UI.IKeybindRowServices
         SettingsPanelState.KeybindPanelRefreshed -= OnKeybindPanelRefreshed;
         SettingsPanelState.IsCapturing = false;
         SettingsPanelState.IsBlockingClose = false;
+
+        harmony?.UnpatchSelf();
     }
 
     private void Update()
     {
-        if (panelTracker is null || uiFinder is null || injector is null || inputDispatcher is null || tabManager is null)
+        if (registry is null || panelTracker is null || uiFinder is null || tabManager is null || rowFactory is null || injector is null || inputDispatcher is null)
             return;
 
         TrackPanel();
@@ -112,100 +116,94 @@ public class SettingsMenuManager : MonoBehaviour, UI.IKeybindRowServices
         PollInputAndToast();
     }
 
-    private void ContinueBuildIfNeeded()
+    private void RunPhase(string name, Action action)
     {
         try
         {
-            if (injector!.IsRebuilding)
-                injector.BuildNextBatch();
+            action();
         }
         catch (Exception ex)
         {
-            Plugin.Logger?.LogError($"SettingsMenuManager.ContinueBuildIfNeeded failed: {ex}");
+            Plugin.Logger?.LogError($"SettingsMenuManager.{name} failed: {ex}");
         }
     }
 
-    private void TrackPanel()
-    {
-        try
-        {
-            panelTracker!.Tick();
-        }
-        catch (Exception ex)
-        {
-            Plugin.Logger?.LogError($"SettingsMenuManager.TrackPanel failed: {ex}");
-        }
-    }
+    private void TrackPanel() => RunPhase(nameof(TrackPanel), () => panelTracker!.Tick());
 
     private void InitializeUIIfNeeded()
     {
-        if (uiFinder!.IsReady || panelTracker!.PanelRoot is null)
-            return;
+        RunPhase(nameof(InitializeUIIfNeeded), () =>
+        {
+            if (uiFinder?.IsReady ?? true)
+                return;
 
-        try
-        {
-            uiFinder.Initialize(panelTracker.PanelRoot);
+            if (panelTracker?.PanelRoot is null)
+                return;
+
+            uiFinder!.Initialize(panelTracker.PanelRoot);
             tabManager!.OnUIReady();
-        }
-        catch (Exception ex)
+        });
+    }
+
+    private void CapturePreRebuildScroll()
+    {
+        RunPhase(nameof(CapturePreRebuildScroll), () =>
         {
-            Plugin.Logger?.LogError($"SettingsMenuManager.InitializeUIIfNeeded failed: {ex}");
-        }
+            if (injector?.IsRebuilding != false)
+                return;
+
+            (preRebuildActiveTab, preRebuildScrollPosition) = ScrollPreserver.Capture(uiFinder?.ScrollRect, tabManager!.GetActiveTabName);
+        });
     }
 
     private void RebuildIfRequested()
     {
-        try
+        RunPhase(nameof(RebuildIfRequested), () =>
         {
             if (injector!.IsRebuilding)
                 return;
 
             if (rebuildCoordinator.TryRebuild(panelTracker!.IsOpen, uiFinder!.IsReady))
                 injector!.StartRebuild(tabManager!.GetActiveTabName());
-        }
-        catch (Exception ex)
+        });
+    }
+
+    private void ContinueBuildIfNeeded()
+    {
+        RunPhase(nameof(ContinueBuildIfNeeded), () =>
         {
-            Plugin.Logger?.LogError($"SettingsMenuManager.RebuildIfRequested failed: {ex}");
-        }
+            if (injector!.IsRebuilding)
+                injector.BuildNextBatch();
+        });
     }
 
     private void UpdateRowsAndState()
     {
-        try
+        RunPhase(nameof(UpdateRowsAndState), () =>
         {
             injector!.UpdateRows();
             SettingsPanelState.IsCapturing = injector.IsCapturing;
             tabManager!.Update(Time.deltaTime);
-        }
-        catch (Exception ex)
-        {
-            Plugin.Logger?.LogError($"SettingsMenuManager.UpdateRowsAndState failed: {ex}");
-        }
+        });
     }
 
-    private void ValidateTabState()
+    private void ValidateTabState() => RunPhase(nameof(ValidateTabState), () => tabManager!.ValidateActiveTab());
+
+    private void RestoreScrollAfterRebuild()
     {
-        try
+        RunPhase(nameof(RestoreScrollAfterRebuild), () =>
         {
-            tabManager!.ValidateActiveTab();
-        }
-        catch (Exception ex)
-        {
-            Plugin.Logger?.LogError($"SettingsMenuManager.ValidateTabState failed: {ex}");
-        }
+            ScrollPreserver.Restore(uiFinder?.ScrollRect, preRebuildActiveTab, tabManager!.GetActiveTabName, preRebuildScrollPosition);
+        });
     }
 
     private void PollInputAndToast()
     {
-        try
+        RunPhase(nameof(PollInputAndToast), () =>
         {
             inputDispatcher!.Poll(!panelTracker!.IsOpen);
             toastManager.Update();
-        }
-        catch (Exception ex)
-        {
-            Plugin.Logger?.LogError($"SettingsMenuManager.PollInputAndToast failed: {ex}");
-        }
+        });
     }
 
     public void ShowKeybindToast(Transform rowTransform, string label, KeyCode key)
@@ -256,28 +254,6 @@ public class SettingsMenuManager : MonoBehaviour, UI.IKeybindRowServices
     private void OnEntryRegistered()
     {
         RequestRebuild();
-    }
-
-    private void CapturePreRebuildScroll()
-    {
-        if (injector?.IsRebuilding != false)
-            return;
-
-        preRebuildActiveTab = tabManager?.GetActiveTabName();
-        preRebuildScrollPosition = uiFinder?.ScrollRect?.verticalNormalizedPosition ?? 1f;
-    }
-
-    private void RestoreScrollAfterRebuild()
-    {
-        if (uiFinder?.ScrollRect is null)
-            return;
-
-        var currentActive = tabManager?.GetActiveTabName();
-        if (currentActive != preRebuildActiveTab)
-            return;
-
-        Canvas.ForceUpdateCanvases();
-        uiFinder.ScrollRect.verticalNormalizedPosition = preRebuildScrollPosition;
     }
 
     private static void RegisterIl2CppTypes()

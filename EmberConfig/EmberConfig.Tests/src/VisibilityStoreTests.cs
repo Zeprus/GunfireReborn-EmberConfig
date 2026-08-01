@@ -150,6 +150,34 @@ public class VisibilityStoreTests
         Assert.True(visibilityRows[0].Config.Value);
     }
 
+    [Fact]
+    public void GetOrCreate_ProducesDistinctConfigKeys_WhenSanitizedBaseCollides()
+    {
+        var store = new VisibilityStore(NewConfig());
+        var first = store.GetOrCreate("A:B", "Tab");
+        var second = store.GetOrCreate("A_B", "Tab");
+
+        Assert.NotEqual(first.Definition.Key, second.Definition.Key);
+    }
+
+    [Fact]
+    public void Initialize_CreatesVisibilitySwitchesForExistingRegistryEntries()
+    {
+        var consumer = CreateConsumer("ExistingMod", "Game Settings", "General");
+        var config = NewConfig();
+
+        VisibilityStore.Initialize(config);
+
+        var visibilityRows = SettingsRegistry.Current.Entries
+            .OfType<SettingEntry<bool>>()
+            .Where(e => e.ModName == VisibilityStore.SentinelModName)
+            .ToList();
+
+        Assert.Single(visibilityRows);
+        Assert.Equal("ExistingMod", visibilityRows[0].Location.SubGroup);
+        Assert.Equal("Game Settings", visibilityRows[0].Label);
+    }
+
     private static ISettingEntry CreateConsumer(string modName, string tab, string? group)
     {
         var config = NewConfig();

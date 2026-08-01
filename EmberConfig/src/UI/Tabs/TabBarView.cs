@@ -212,30 +212,32 @@ internal sealed class TabBarView
         Canvas.ForceUpdateCanvases();
 
         for (int i = 0; i < content.childCount; i++)
-        {
-            var child = content.GetChild(i);
-            if (child is null || child.GetComponent<M1Toggle>() is null)
-                continue;
+            AdjustTabLabel(content.GetChild(i), width);
+    }
 
-            var typeNameObj = child.Find("type_name");
-            var typeName = typeNameObj?.GetComponent<TextMeshProUGUI>();
-            var typeNameRect = typeNameObj?.GetComponent<RectTransform>();
-            if (typeName is not null && typeNameRect is not null)
-            {
-                // Ensure the label's own RectTransform is exactly the tab size.
-                // TMP's auto-size text container sometimes expands the label object,
-                // which breaks both fitting and clipping.
-                typeNameRect.anchorMin = Vector2.zero;
-                typeNameRect.anchorMax = Vector2.one;
-                typeNameRect.pivot = new Vector2(0.5f, 0.5f);
-                typeNameRect.anchoredPosition = Vector2.zero;
-                typeNameRect.sizeDelta = Vector2.zero;
-                typeName.autoSizeTextContainer = false;
+    private static void AdjustTabLabel(Transform? tab, float width)
+    {
+        if (tab is null || tab.GetComponent<M1Toggle>() is null)
+            return;
 
-                typeName.fontSizeMin = EmberConfigSettings.TabMinFontSize;
-                TabButtonBuilder.FitText(typeName, width);
-            }
-        }
+        var typeNameObj = tab.Find("type_name");
+        var typeName = typeNameObj?.GetComponent<TextMeshProUGUI>();
+        var typeNameRect = typeNameObj?.GetComponent<RectTransform>();
+        if (typeName is null || typeNameRect is null)
+            return;
+
+        // Ensure the label's own RectTransform is exactly the tab size.
+        // TMP's auto-size text container sometimes expands the label object,
+        // which breaks both fitting and clipping.
+        typeNameRect.anchorMin = Vector2.zero;
+        typeNameRect.anchorMax = Vector2.one;
+        typeNameRect.pivot = new Vector2(0.5f, 0.5f);
+        typeNameRect.anchoredPosition = Vector2.zero;
+        typeNameRect.sizeDelta = Vector2.zero;
+        typeName.autoSizeTextContainer = false;
+
+        typeName.fontSizeMin = EmberConfigSettings.TabMinFontSize;
+        TabButtonBuilder.FitText(typeName, width);
     }
 
     public void HideSourceTabs()

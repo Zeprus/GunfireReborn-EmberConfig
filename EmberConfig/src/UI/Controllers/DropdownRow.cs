@@ -93,8 +93,8 @@ internal class DropdownRow : SettingRowBase
     {
         WwiseAudio.PostIfValid(clickSoundEventId, dropdown?.gameObject ?? GameObject);
 
-        if (Entry is null || index < 0 || index >= options.Length) return;
-        Entry.Config.BoxedValue = options[index];
+        if (index < 0 || index >= options.Length) return;
+        SetValue(options[index], save: true);
     }
 
     protected override void OnUnbind()

@@ -5,6 +5,7 @@ using BepInEx.Configuration;
 using EmberConfig.Core;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 internal class SliderRow : SettingRowBase
@@ -49,6 +50,22 @@ internal class SliderRow : SettingRowBase
         onSliderChanged = OnSliderChanged;
         slider.onValueChanged.RemoveAllListeners();
         slider.onValueChanged.AddListener(onSliderChanged);
+
+        var trigger = slider.gameObject.GetComponent<EventTrigger>() ?? slider.gameObject.AddComponent<EventTrigger>();
+        for (int i = trigger.triggers.Count - 1; i >= 0; i--)
+        {
+            if (trigger.triggers[i].eventID == EventTriggerType.PointerUp)
+                trigger.triggers.RemoveAt(i);
+        }
+
+        var pointerUp = new EventTrigger.Entry { eventID = EventTriggerType.PointerUp };
+        Action<BaseEventData> onPointerUp = _ =>
+        {
+            var value = isInt ? (object)Convert.ToInt32(slider.value) : slider.value;
+            SetValue(value, save: true);
+        };
+        pointerUp.callback.AddListener(onPointerUp);
+        trigger.triggers.Add(pointerUp);
 
         if (valueInput is not null)
         {
@@ -102,7 +119,7 @@ internal class SliderRow : SettingRowBase
 
         if (Entry is null) return;
         var newValue = isInt ? (object)Convert.ToInt32(value) : value;
-        Entry.Config.BoxedValue = newValue;
+        SetValue(newValue, save: false);
     }
 
     private void OnSelect(string _)
@@ -115,17 +132,19 @@ internal class SliderRow : SettingRowBase
     {
         if (valueInput is null || slider is null) return;
 
-        if (!float.TryParse(text, out var parsed))
+        if (!NumberParser.TryParseFloat(text, out var parsed))
         {
             valueInput.text = FormatValue();
             return;
         }
 
-        var clamped = System.Math.Clamp(parsed, slider.minValue, slider.maxValue);
-        if (isInt)
-            clamped = Convert.ToInt32(clamped);
+        var clampedValue = System.Math.Clamp(parsed, slider.minValue, slider.maxValue);
+        var clamped = isInt
+            ? (object)Convert.ToInt32(clampedValue)
+            : (object)clampedValue;
 
-        slider.value = clamped;
+        SetValue(clamped, save: true);
+        slider.value = clampedValue;
         valueInput.text = FormatValue();
     }
 

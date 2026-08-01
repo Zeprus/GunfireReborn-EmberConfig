@@ -115,11 +115,8 @@ internal class CarouselRow : SettingRowBase
             next = 0;
 
         currentIndex = next;
-        if (Entry is not null && currentIndex < options.Length)
-        {
-            Entry.Config.BoxedValue = options[currentIndex];
-            Entry.Config.ConfigFile.Save();
-        }
+        if (currentIndex < options.Length)
+            SetValue(options[currentIndex], save: true);
 
         UpdateValueText();
         UpdateDots();

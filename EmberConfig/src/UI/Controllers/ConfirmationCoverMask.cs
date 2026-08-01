@@ -18,16 +18,6 @@ internal sealed class ConfirmationCoverMask
     private TextMeshProUGUI? titleText;
     private TextMeshProUGUI? descriptionText;
 
-    private static readonly ColorBlock RedColorBlock = new()
-    {
-        normalColor = new Color(0.25f, 0.05f, 0.05f, 0.42f),
-        highlightedColor = new Color(0.40f, 0.12f, 0.12f, 0.50f),
-        pressedColor = new Color(0.20f, 0.04f, 0.04f, 0.42f),
-        disabledColor = new Color(0.15f, 0.03f, 0.03f, 0.30f),
-        colorMultiplier = 1f,
-        fadeDuration = 0.1f
-    };
-
     public void Show(Transform viewport, StyleCatalog style, string title, string description, Action onReset, Action onCancel)
     {
         if (mask is null || mask.Equals(null))
@@ -83,7 +73,7 @@ internal sealed class ConfirmationCoverMask
         Sprite? sprite = style.Row.BackgroundSprite;
         var imageType = style.Row.BackgroundType;
         var cancelImageColor = Color.white;
-        var cancelColors = RedColorBlock;
+        var cancelColors = UIStyleConstants.DestructiveColorBlock;
 
         if (style.KeybindButton is { } keybindStyle)
         {
@@ -94,7 +84,7 @@ internal sealed class ConfirmationCoverMask
             cancelColors = keybindStyle.ButtonColors;
         }
 
-        CreateButton(container.transform, resetTextStyle, sprite, imageType, Color.white, RedColorBlock, "Reset", onReset);
+        CreateButton(container.transform, resetTextStyle, sprite, imageType, Color.white, UIStyleConstants.DestructiveColorBlock, "Reset", onReset);
         CreateButton(container.transform, cancelTextStyle, sprite, imageType, cancelImageColor, cancelColors, "Cancel", onCancel);
 
         Canvas.ForceUpdateCanvases();
@@ -255,6 +245,8 @@ internal sealed class ConfirmationCoverMask
         button.onClick.AddListener(handler);
 
         go.SetActive(true);
+        button.TranslateState(0, true);
+
         return button;
     }
 

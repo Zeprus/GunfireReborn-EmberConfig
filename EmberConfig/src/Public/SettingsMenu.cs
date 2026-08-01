@@ -22,12 +22,9 @@ public static class SettingsMenu
     /// <exception cref="ArgumentException">Thrown when <typeparamref name="T"/> is <see cref="KeyCode"/>.</exception>
     public static ConfigEntry<T> Register<T>(ConfigFile configFile, SettingOptions<T> options)
     {
-        if (configFile is null)
-            throw new ArgumentNullException(nameof(configFile));
-        if (options is null)
-            throw new ArgumentNullException(nameof(options));
-        if (string.IsNullOrWhiteSpace(options.ModName))
-            throw new ArgumentException("ModName cannot be empty.", nameof(options));
+        configFile = RequireNonNull(configFile, nameof(configFile));
+        options = RequireNonNull(options, nameof(options));
+        ValidateModName(options.ModName, nameof(options));
         if (typeof(T) == typeof(KeyCode))
             throw new ArgumentException("KeyCode settings must be registered with RegisterKeybind.", nameof(options));
 
@@ -48,12 +45,10 @@ public static class SettingsMenu
     /// <exception cref="ArgumentException">Thrown when <paramref name="options.Label"/> is empty or <typeparamref name="T"/> is <see cref="KeyCode"/>.</exception>
     public static ConfigEntry<T> Register<T>(ConfigEntry<T> config, SettingOptions<T> options)
     {
-        if (config is null)
-            throw new ArgumentNullException(nameof(config));
-        if (options is null)
-            throw new ArgumentNullException(nameof(options));
-        if (string.IsNullOrWhiteSpace(options.ModName))
-            throw new ArgumentException("ModName cannot be empty.", nameof(options));
+        config = RequireNonNull(config, nameof(config));
+        options = RequireNonNull(options, nameof(options));
+        ValidateModName(options.ModName, nameof(options));
+        ValidateNotNullOrWhiteSpace(options.Label, nameof(options.Label));
         if (typeof(T) == typeof(KeyCode))
             throw new ArgumentException("KeyCode settings must be registered with RegisterKeybind.", nameof(config));
 
@@ -77,14 +72,10 @@ public static class SettingsMenu
     /// <exception cref="ArgumentException">Thrown when <paramref name="options.Key"/> is empty.</exception>
     public static KeybindRegistration RegisterKeybind(ConfigFile configFile, KeybindOptions options)
     {
-        if (configFile is null)
-            throw new ArgumentNullException(nameof(configFile));
-        if (options is null)
-            throw new ArgumentNullException(nameof(options));
-        if (string.IsNullOrWhiteSpace(options.ModName))
-            throw new ArgumentException("ModName cannot be empty.", nameof(options));
-        if (string.IsNullOrWhiteSpace(options.Key))
-            throw new ArgumentException("Key cannot be empty.", nameof(options));
+        configFile = RequireNonNull(configFile, nameof(configFile));
+        options = RequireNonNull(options, nameof(options));
+        ValidateModName(options.ModName, nameof(options));
+        ValidateNotNullOrWhiteSpace(options.Key, nameof(options.Key));
 
         var configDescription = new ConfigDescription(options.Description ?? string.Empty, null);
         var primary = configFile.Bind(options.Section, options.Key, options.DefaultPrimary, configDescription);
@@ -107,14 +98,10 @@ public static class SettingsMenu
     /// <exception cref="ArgumentException">Thrown when <paramref name="options.Label"/> is empty.</exception>
     public static KeybindRegistration RegisterKeybind(ConfigEntry<KeyCode> primary, ConfigEntry<KeyCode>? secondary, KeybindOptions options)
     {
-        if (primary is null)
-            throw new ArgumentNullException(nameof(primary));
-        if (options is null)
-            throw new ArgumentNullException(nameof(options));
-        if (string.IsNullOrWhiteSpace(options.ModName))
-            throw new ArgumentException("ModName cannot be empty.", nameof(options));
-        if (string.IsNullOrWhiteSpace(options.Label))
-            throw new ArgumentException("Label cannot be empty.", nameof(options));
+        primary = RequireNonNull(primary, nameof(primary));
+        options = RequireNonNull(options, nameof(options));
+        ValidateModName(options.ModName, nameof(options));
+        ValidateNotNullOrWhiteSpace(options.Label, nameof(options.Label));
 
         var location = CreateLocation(options.Tab, options.Group, options.SubGroup);
         var id = Guid.NewGuid().ToString("N");
@@ -124,6 +111,25 @@ public static class SettingsMenu
         if (VisibilityStore.IsInitialized)
             VisibilityStore.Current.EnsureVisibilitySwitch(entry);
         return new KeybindRegistration(primary, secondary);
+    }
+
+    private static T RequireNonNull<T>(T? value, string paramName) where T : class
+    {
+        if (value is null)
+            throw new ArgumentNullException(paramName);
+        return value;
+    }
+
+    private static void ValidateModName(string? modName, string paramName)
+    {
+        if (string.IsNullOrWhiteSpace(modName))
+            throw new ArgumentException("ModName cannot be empty.", paramName);
+    }
+
+    private static void ValidateNotNullOrWhiteSpace(string? value, string paramName)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            throw new ArgumentException($"{paramName} cannot be empty.", paramName);
     }
 
     private static SettingLocation CreateLocation(string tab, string? group, string? subGroup)

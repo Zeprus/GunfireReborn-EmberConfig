@@ -39,7 +39,15 @@ public sealed class VisibilityStore
 
     public static void Initialize(ConfigFile configFile)
     {
-        current = new VisibilityStore(configFile);
+        var store = new VisibilityStore(configFile);
+        current = store;
+
+        if (SettingsRegistry.IsInitialized)
+        {
+            var snapshot = SettingsRegistry.Current.Entries.ToList();
+            foreach (var entry in snapshot)
+                store.EnsureVisibilitySwitch(entry);
+        }
     }
 
     /// <summary>
@@ -135,17 +143,29 @@ public sealed class VisibilityStore
 
         configFile.Save();
 
-        // Re-create visibility switches for all current consumer entries.
-        foreach (var consumer in SettingsRegistry.Current.Entries.Where(e => e.ModName != SentinelModName && !IsAlwaysVisible(e.ModName, e.Location.Tab)).ToList())
+        // Re-create visibility switches for all current consumer entries, once per distinct (ModName, Tab) pair.
+        var distinctConsumers = SettingsRegistry.Current.Entries
+            .Where(e => !IsAlwaysVisible(e.ModName, e.Location.Tab))
+            .GroupBy(e => GetKey(e.ModName, e.Location.Tab))
+            .Select(g => g.First())
+            .ToList();
+
+        foreach (var consumer in distinctConsumers)
             EnsureVisibilitySwitch(consumer);
     }
 
-    private static bool IsAlwaysVisible(string modName, string tabName)
+    private static bool IsAlwaysVisible(string? modName, string? tabName)
     {
-        if (modName == SentinelModName)
+        if (modName is null || tabName is null)
+            return false;
+
+        var mod = modName.Trim();
+        var tab = tabName.Trim();
+
+        if (string.Equals(mod, SentinelModName, StringComparison.OrdinalIgnoreCase))
             return true;
 
-        if (modName == "EmberConfig" && tabName == VisibilityTab)
+        if (string.Equals(mod, "EmberConfig", StringComparison.OrdinalIgnoreCase) && string.Equals(tab, VisibilityTab, StringComparison.OrdinalIgnoreCase))
             return true;
 
         return false;
@@ -158,15 +178,33 @@ public sealed class VisibilityStore
 
     private static string SanitizeConfigKey(string value)
     {
-        var sb = new StringBuilder(value.Length);
+        var baseKeyBuilder = new StringBuilder(value.Length);
         foreach (var c in value)
         {
-            if (c == '=' || c == ':' || c == ';' || c == '#' || c == '[' || c == ']' || char.IsControl(c))
-                sb.Append('_');
+            if (c == '=' || c == ':' || c == ';' || c == '#' || c == '[' || c == ']' || c == '\\' || c == '"' || c == '\'' || char.IsControl(c))
+                baseKeyBuilder.Append('_');
             else
-                sb.Append(c);
+                baseKeyBuilder.Append(c);
         }
 
-        return sb.ToString().Trim();
+        var baseKey = baseKeyBuilder.ToString().Trim();
+        var hash = ComputeFnv1aHash(value);
+        return $"{baseKey}_{hash:x8}";
+    }
+
+    private static uint ComputeFnv1aHash(string value)
+    {
+        const uint offsetBasis = 2166136261;
+        const uint prime = 16777619;
+        var hash = offsetBasis;
+
+        var bytes = Encoding.UTF8.GetBytes(value);
+        foreach (var b in bytes)
+        {
+            hash ^= b;
+            hash *= prime;
+        }
+
+        return hash;
     }
 }

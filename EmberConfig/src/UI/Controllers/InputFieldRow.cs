@@ -52,9 +52,7 @@ internal class InputFieldRow : SettingRowBase
         try
         {
             var type = Entry.Config.SettingType;
-            object? converted = type == typeof(string)
-                ? (text ?? string.Empty)
-                : Convert.ChangeType(text, type);
+            object? converted = NumberParser.ConvertToType(text, type);
 
             var acceptableValues = Entry.Config.Description?.AcceptableValues;
             if (acceptableValues is not null && !acceptableValues.IsValid(converted))
@@ -63,7 +61,7 @@ internal class InputFieldRow : SettingRowBase
                 return;
             }
 
-            Entry.Config.BoxedValue = converted;
+            SetValue(converted, save: true);
         }
         catch (Exception ex)
         {
