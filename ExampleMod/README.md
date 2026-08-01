@@ -20,7 +20,7 @@ A sample BepInEx 6 plugin that shows how to register every kind of setting and k
 From the workspace root:
 
 ```bash
-dotnet build Mods/EmberConfig/EmberConfig.csproj -p:DeployToPlugins=false
+dotnet build Mods/EmberConfig/EmberConfig/EmberConfig.csproj -p:DeployToPlugins=false
 dotnet build Mods/EmberConfig/ExampleMod/ExampleMod.csproj -p:DeployToPlugins=false
 ```
 
@@ -44,6 +44,6 @@ EmberConfig must also be present in `BepInEx/plugins/`.
    - `Show FPS Marker`, `Show Hints`, and `Enable Overlay` render as vanilla `Switch` two-option toggles.
    - `Show Hints` uses the custom `SwitchLabels: new SwitchLabels("Show", "Hide")` labels.
    - `Difficulty` and `Region` render as dropdowns.
-   - `Difficulty Carousel` requests the `Carousel` style (currently falls back to a dropdown until the carousel builder is implemented).
+   - `Difficulty Carousel` requests the `Carousel` style.
 6. Change a slider, toggle, dropdown, or input value and check `BepInEx/LogOutput.log` for callback messages.
 7. Click a keybind capture button, press a key, and verify the vanilla cover mask and toast appear.

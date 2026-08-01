@@ -33,24 +33,39 @@ From the `Mods/EmberConfig` directory, pass two arguments:
 ```bash
 dotnet run --project PrefabDataGen/PrefabDataGen.csproj -- \
   "<YourRippedAssets>/ExportedProject" \
-  "src/Generated/PrefabData"
+  "EmberConfig/src/Generated/PrefabData"
 ```
 
-The default output location is `src/Generated/PrefabData` and is already excluded from `EmberConfig.csproj` for files that should not be compiled.
+The default output location is `EmberConfig/src/Generated/PrefabData` and is already excluded from `EmberConfig/EmberConfig.csproj` for files that should not be compiled.
 
 ## What it does
 
 1. **Loads `PC_Panel_setting.prefab`** from the ripped prefabs.
 2. **Parses the Unity YAML** into an in-memory object model (`GameObjectNode`, `ComponentNode`, etc.).
-3. **Resolves asset GUIDs** to human-readable names by scanning `.asset.meta` and `.mat.meta` files (sprites, fonts, and materials).
-4. **Extracts a representative row** from the prefab: title text appearance, background color/sprite, highlight color, RectTransform data, and so on.
-5. **Emits `PrefabStyleFactory.cs`**, which the mod uses at runtime to build `RowStyle` and, in later phases, the other control styles.
+3. **Resolves asset GUIDs** to human-readable names by scanning `*.asset`, `*.mat`, `*.png`, `*.jpg`, `*.tga`, and `*.psd` files and reading their sibling `*.meta` files (sprites, fonts, and materials).
+4. **Extracts a representative row and tab** from the panel prefab, and extracts dropdown, switch, slider, keybind, carousel, and input from their respective prefabs.
+5. **Emits the generated style factories** into `EmberConfig/src/Generated/PrefabData/`:
+   - `RowStyleFactory.cs`
+   - `DropdownStyleFactory.cs`
+   - `SwitchStyleFactory.cs`
+   - `SliderStyleFactory.cs`
+   - `KeybindButtonStyleFactory.cs`
+   - `CarouselStyleFactory.cs`
+   - `InputStyleFactory.cs`
+   - `TabStyleFactory.cs`
 
 ## Inspecting the output
 
-After running, check:
+After running, check the generated factory files in `EmberConfig/src/Generated/PrefabData/`:
 
-- `Mods/EmberConfig/src/Generated/PrefabData/PrefabStyleFactory.cs` — the generated C# that feeds `StyleCatalog.Create`.
+- `RowStyleFactory.cs` — the row background, title text, and layout.
+- `DropdownStyleFactory.cs` — the dropdown item, template, and scrollbar.
+- `SwitchStyleFactory.cs` — the toggle group and option look.
+- `SliderStyleFactory.cs` — the slider background, fill, handle, and number text.
+- `KeybindButtonStyleFactory.cs` — the keybind primary/secondary text and layout.
+- `CarouselStyleFactory.cs` — the carousel arrows and dot group.
+- `InputStyleFactory.cs` — the fallback input field built from row text.
+- `TabStyleFactory.cs` — the selected and unselected tab text and background.
 
 You can compare the generated values against the source prefab YAML by searching for the row GameObject whose children are named `Title` and `Item`.
 
@@ -58,10 +73,10 @@ You can compare the generated values against the source prefab YAML by searching
 
 To add a new control style (e.g. `Switch`, `Slider`, `Dropdown`):
 
-1. Add an `Extraction/*StyleExtractor.cs` class in `PrefabDataGen/Extraction/`.
+1. Add an `Extraction/*StyleExtractor.cs` class in `PrefabDataGen/Extraction/` and compose it from the shared helpers in that folder (rect, text, sprite, color-block, predicates, etc.).
 2. Add a `Models/*RawStyle.cs` record.
-3. Extend `CSharpFileWriter.cs` to emit the style and a factory method.
-4. Update `Generator.cs` to call the extractor and write the output.
+3. Add a `Write*StyleFactory` method in `PrefabDataGen/Generation/CSharpFileWriter.cs` that builds the argument list and calls `CSharpCodeBuilder` to emit the factory.
+4. Add a `StyleJob<TStyle>` entry in `PrefabDataGen/Generation/Generator.cs` that loads the prefab (when one exists), calls the new extractor, and writes the output.
 5. Wire the runtime `*Style` record and `*ElementBuilder` to consume the generated data.
 
 See `RowStyleExtractor.cs` for the current reference implementation.
@@ -70,4 +85,4 @@ See `RowStyleExtractor.cs` for the current reference implementation.
 
 - **"AssetRips path not found"** — make sure you are passing the directory that contains `Assets`, not the `Assets` directory itself.
 - **"Could not find a row with 'Title' and 'Item' children"** — verify that `PC_Panel_setting.prefab` exists and contains at least one GameObject with both a `Title` and `Item` child.
-- **Asset names resolve to `null`** — check that the `.meta` files for sprites, fonts, and materials are present under the `Assets` tree.
+- **Asset names resolve to `null`** — check that the `*.meta` files for sprites, fonts, and materials are present next to their `*.asset`, `*.mat`, `*.png`, `*.jpg`, `*.tga`, or `*.psd` files under the `Assets` tree.

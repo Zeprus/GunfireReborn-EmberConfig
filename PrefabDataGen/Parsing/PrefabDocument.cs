@@ -17,20 +17,8 @@ internal sealed class PrefabDocument
         RootGameObjects = gameObjects.Values.Where(g => g.Parent is null).ToList();
     }
 
-    public ComponentNode? GetComponent(long fileID) =>
-        Components.TryGetValue(fileID, out var node) ? node : null;
-
     public GameObjectNode? GetGameObject(long fileID) =>
         GameObjects.TryGetValue(fileID, out var node) ? node : null;
-
-    public GameObjectNode? FindGameObject(string name) =>
-        GameObjects.Values.FirstOrDefault(g => g.Name == name);
-
-    public GameObjectNode? FindGameObject(Func<GameObjectNode, bool> predicate) =>
-        GameObjects.Values.FirstOrDefault(predicate);
-
-    public IEnumerable<GameObjectNode> FindGameObjects(Func<GameObjectNode, bool> predicate) =>
-        GameObjects.Values.Where(g => predicate(g));
 
     public GameObjectNode? FindBestRow()
     {

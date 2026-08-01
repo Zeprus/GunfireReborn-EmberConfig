@@ -3,7 +3,6 @@ namespace EmberConfig.PrefabDataGen.Parsing;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using EmberConfig.PrefabDataGen.Models;
 using YamlDotNet.RepresentationModel;
 
@@ -39,12 +38,6 @@ internal sealed class ComponentNode
             ? value
             : null;
 
-    public uint? GetUInt(string key) =>
-        Properties.TryGetChild(key, out var node) && node is YamlScalarNode scalar &&
-        uint.TryParse(scalar.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var value)
-            ? value
-            : null;
-
     public bool? GetBool(string key)
     {
         if (Properties.TryGetChild(key, out var node) && node is YamlScalarNode scalar)
@@ -54,17 +47,6 @@ internal sealed class ComponentNode
                 return true;
             if (value is "0" or "false")
                 return false;
-        }
-
-        return null;
-    }
-
-    public T? GetEnum<T>(string key) where T : struct, Enum
-    {
-        if (Properties.TryGetChild(key, out var node) && node is YamlScalarNode scalar &&
-            int.TryParse(scalar.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var value))
-        {
-            return (T)Enum.ToObject(typeof(T), value);
         }
 
         return null;
@@ -142,11 +124,6 @@ internal sealed class ComponentNode
         return list;
     }
 
-    public string? GetScriptGuid()
-    {
-        var reference = GetReference("m_Script");
-        return reference?.Guid;
-    }
 }
 
 internal readonly record struct FileIdReference(long FileID, string? Guid);

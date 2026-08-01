@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>EmberConfig.Tests</RootNamespace>
+    <AssemblyName>EmberConfig.Tests</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EmberConfig.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="$(BepInExDir)\core\*.dll" Exclude="$(BepInExDir)\core\dobby.dll" Private="false" />
+    <Reference Include="$(GameLibDir)\*.dll" Exclude="$(GameLibDir)\Newtonsoft.Json.dll" Private="false" />
+  </ItemGroup>
+
+  <Target Name="CopyBepInExAndGameAssemblies" AfterTargets="Build">
+    <ItemGroup>
+      <_BepInExAssembly Include="$(BepInExDir)\core\*.dll" Exclude="$(BepInExDir)\core\dobby.dll" />
+      <_GameAssembly Include="$(GameLibDir)\*.dll" Exclude="$(GameLibDir)\Newtonsoft.Json.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_BepInExAssembly)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_GameAssembly)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.10.0" />
+    <PackageReference Include="xunit" Version="2.8.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.1">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>

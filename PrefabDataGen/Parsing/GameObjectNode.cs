@@ -21,9 +21,6 @@ internal sealed class GameObjectNode
         Components = components;
     }
 
-    public ComponentNode? GetComponentByTypeName(string typeName) =>
-        Components.FirstOrDefault(c => c.TypeName == typeName);
-
     public GameObjectNode? FindChild(string name) =>
         Children.FirstOrDefault(c => c.Name == name);
 

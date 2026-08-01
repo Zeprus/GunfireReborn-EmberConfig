@@ -13,9 +13,11 @@ using UnityEngine;
 /// Example BepInEx 6 plugin demonstrating every EmberConfig registration pattern.
 /// </summary>
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
-[BepInDependency("zeprus.gunfire.EmberConfig", BepInDependency.DependencyFlags.SoftDependency)]
+[BepInDependency(EmberConfigGuid, BepInDependency.DependencyFlags.SoftDependency)]
 public class Plugin : BasePlugin
 {
+    private const string EmberConfigGuid = "zeprus.gunfire.EmberConfig";
+
     /// <summary>
     /// Shared logger for the example mod. Set during <see cref="Load"/>.
     /// </summary>
@@ -50,6 +52,6 @@ public class Plugin : BasePlugin
     [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
     private static bool IsEmberConfigLoaded()
     {
-        return IL2CPPChainloader.Instance?.Plugins.ContainsKey("zeprus.gunfire.EmberConfig") ?? false;
+        return IL2CPPChainloader.Instance?.Plugins.ContainsKey(EmberConfigGuid) ?? false;
     }
 }

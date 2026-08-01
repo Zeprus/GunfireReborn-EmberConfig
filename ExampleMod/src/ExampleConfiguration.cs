@@ -196,6 +196,10 @@ public static class ExampleConfiguration
     /// Here we create the ConfigEntry ourselves and ask EmberConfig to register
     /// the UI. This is useful when your mod already has a config entry.
     /// </summary>
+    /// <remarks>
+    /// The default value and description are duplicated in SettingOptions because
+    /// EmberConfig does not re-derive them from the existing ConfigEntry.
+    /// </remarks>
     private static void RegisterMaxFpsInput(ConfigFile config, ExampleMonoBehaviour behaviour)
     {
         var configEntry = config.Bind("Example", "MaxFps", 120, "Example max FPS cap; 0 or negative disables the cap.");
@@ -217,6 +221,10 @@ public static class ExampleConfiguration
     /// Example 7: A float input field with no range.
     /// This demonstrates a plain numeric value that the user types in directly.
     /// </summary>
+    /// <remarks>
+    /// The default value and description are duplicated in SettingOptions because
+    /// EmberConfig does not re-derive them from the existing ConfigEntry.
+    /// </remarks>
     private static void RegisterMouseSensitivityInput(ConfigFile config, ExampleMonoBehaviour behaviour)
     {
         var configEntry = config.Bind("Example", "MouseSensitivity", 1.0f, "Example mouse sensitivity multiplier.");
@@ -238,6 +246,10 @@ public static class ExampleConfiguration
     /// Example 8: A free-text string input field.
     /// This is a ConfigEntry example, so the ConfigEntry is created before registration.
     /// </summary>
+    /// <remarks>
+    /// The default value and description are duplicated in SettingOptions because
+    /// EmberConfig does not re-derive them from the existing ConfigEntry.
+    /// </remarks>
     private static void RegisterNicknameInput(ConfigFile config, ExampleMonoBehaviour behaviour)
     {
         var configEntry = config.Bind("Example", "Nickname", "Player", "Example player nickname.");
@@ -260,6 +272,10 @@ public static class ExampleConfiguration
     /// The ConfigEntry is created with the same list so the value is validated
     /// and the dropdown is populated automatically.
     /// </summary>
+    /// <remarks>
+    /// The default value and description are duplicated in SettingOptions because
+    /// EmberConfig does not re-derive them from the existing ConfigEntry.
+    /// </remarks>
     private static void RegisterLanguageDropdown(ConfigFile config, ExampleMonoBehaviour behaviour)
     {
         var acceptableValues = new AcceptableValueList<string>("English", "French", "German", "Japanese", "Spanish");
@@ -283,6 +299,10 @@ public static class ExampleConfiguration
     /// Example 10: An integer dropdown built from an AcceptableValueList.
     /// This shows that lists are not limited to strings.
     /// </summary>
+    /// <remarks>
+    /// The default value and description are duplicated in SettingOptions because
+    /// EmberConfig does not re-derive them from the existing ConfigEntry.
+    /// </remarks>
     private static void RegisterMaxRetriesDropdown(ConfigFile config, ExampleMonoBehaviour behaviour)
     {
         var acceptableValues = new AcceptableValueList<int>(0, 1, 2, 3, 5, 10);
@@ -431,6 +451,10 @@ public static class ExampleConfiguration
     /// "Example Mod: Gameplay" tab. It is created from an existing ConfigEntry
     /// and controls the marker object.
     /// </summary>
+    /// <remarks>
+    /// The default value and description are duplicated in SettingOptions because
+    /// EmberConfig does not re-derive them from the existing ConfigEntry.
+    /// </remarks>
     private static void RegisterShowHintsToggle(ConfigFile config, ExampleMonoBehaviour behaviour)
     {
         var configEntry = config.Bind("Example", "ShowHints", true, "Show the example hint marker.");
@@ -452,10 +476,14 @@ public static class ExampleConfiguration
     }
 
     /// <summary>
-    /// Example 17: A float input field with no range on the custom
+    /// Example 18: A float input field with no range on the custom
     /// "Example Mod: Rendering" tab. This demonstrates a plain text box for a
     /// decimal value.
     /// </summary>
+    /// <remarks>
+    /// The default value and description are duplicated in SettingOptions because
+    /// EmberConfig does not re-derive them from the existing ConfigEntry.
+    /// </remarks>
     private static void RegisterGammaInput(ConfigFile config, ExampleMonoBehaviour behaviour)
     {
         var configEntry = config.Bind("Example", "Gamma", 1.0f, "Example gamma correction value.");
@@ -474,10 +502,14 @@ public static class ExampleConfiguration
     }
 
     /// <summary>
-    /// Example 18: A string dropdown from a ConfigEntry on the custom
+    /// Example 19: A string dropdown from a ConfigEntry on the custom
     /// "Example Mod: Network and Input" tab. The list is passed both to
     /// Config.Bind (for validation) and to SettingOptions.
     /// </summary>
+    /// <remarks>
+    /// The default value and description are duplicated in SettingOptions because
+    /// EmberConfig does not re-derive them from the existing ConfigEntry.
+    /// </remarks>
     private static void RegisterRegionDropdown(ConfigFile config, ExampleMonoBehaviour behaviour)
     {
         var acceptableValues = new AcceptableValueList<string>("NA", "EU", "ASIA", "OCE");
@@ -498,10 +530,14 @@ public static class ExampleConfiguration
     }
 
     /// <summary>
-    /// Example 19: An integer slider from a ConfigEntry on the custom
+    /// Example 20: An integer slider from a ConfigEntry on the custom
     /// "Example Mod: Gameplay" tab. This updates the game's target frame rate
     /// whenever the slider changes.
     /// </summary>
+    /// <remarks>
+    /// The default value and description are duplicated in SettingOptions because
+    /// EmberConfig does not re-derive them from the existing ConfigEntry.
+    /// </remarks>
     private static void RegisterFpsCapSlider(ConfigFile config, ExampleMonoBehaviour behaviour)
     {
         var acceptableValues = new AcceptableValueRange<int>(0, 240);
@@ -522,7 +558,7 @@ public static class ExampleConfiguration
     }
 
     /// <summary>
-    /// Example 20: A dual-key keybind created from existing ConfigEntries.
+    /// Example 21: A dual-key keybind created from existing ConfigEntries.
     /// Primary and secondary keys can both trigger the same callback, which is
     /// useful for actions like sprint or push-to-talk on the custom
     /// "Example Mod: Network and Input" tab.

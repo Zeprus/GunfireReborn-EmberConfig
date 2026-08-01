@@ -5,9 +5,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using EmberConfig.PrefabDataGen;
 
 internal sealed class AssetNameResolver
 {
+    private static readonly Regex AssetNameRegex = new(@"^\s*m_Name:\s*(.*)$", RegexOptions.Compiled);
+
     private readonly string assetRipsPath;
     private readonly Dictionary<string, string> guidToAssetPath;
 
@@ -31,19 +34,22 @@ internal sealed class AssetNameResolver
     private Dictionary<string, string> BuildGuidIndex()
     {
         var index = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        var assetsPath = assetRipsPath;
-        if (!Directory.Exists(assetsPath))
+        if (!Directory.Exists(assetRipsPath))
             return index;
 
-        foreach (var metaPath in Directory.EnumerateFiles(assetsPath, "*.meta", SearchOption.AllDirectories))
+        var extensions = new[] { "*.asset", "*.mat", "*.png", "*.jpg", "*.tga", "*.psd" };
+        foreach (var extension in extensions)
         {
-            var guid = ExtractGuid(metaPath);
-            if (string.IsNullOrEmpty(guid))
-                continue;
+            foreach (var assetPath in Directory.EnumerateFiles(assetRipsPath, extension, SearchOption.AllDirectories))
+            {
+                var metaPath = assetPath + ".meta";
+                if (!File.Exists(metaPath))
+                    continue;
 
-            var assetPath = metaPath[..^".meta".Length];
-            if (File.Exists(assetPath))
-                index[guid] = assetPath;
+                var guid = ExtractGuid(metaPath);
+                if (!string.IsNullOrEmpty(guid))
+                    index[guid] = assetPath;
+            }
         }
 
         return index;
@@ -72,10 +78,9 @@ internal sealed class AssetNameResolver
 
         try
         {
-            var regex = new Regex(@"^\s*m_Name:\s*(.*)$", RegexOptions.Compiled);
             foreach (var line in File.ReadLines(assetPath).Take(30))
             {
-                var match = regex.Match(line);
+                var match = AssetNameRegex.Match(line);
                 if (match.Success)
                 {
                     var name = match.Groups[1].Value.Trim();
@@ -83,9 +88,13 @@ internal sealed class AssetNameResolver
                 }
             }
         }
-        catch
+        catch (IOException ex)
         {
-            // ignored
+            Log.Error($"Could not read asset name from {assetPath}: {ex.Message}");
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            Log.Error($"Could not read asset name from {assetPath}: {ex.Message}");
         }
 
         return Path.GetFileNameWithoutExtension(assetPath);

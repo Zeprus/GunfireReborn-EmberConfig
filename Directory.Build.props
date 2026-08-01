@@ -1,0 +1,28 @@
+<Project>
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <DefaultItemExcludes>$(DefaultItemExcludes);obj\**;bin\**;*.Tests\**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <PropertyGroup Label="GamePaths">
+    <GameDir Condition="'$(GameDir)' == '' and '$(GUNFIRE_REBORN_DIR)' != ''">$(GUNFIRE_REBORN_DIR)</GameDir>
+    <GameDir Condition="'$(GameDir)' == ''">E:\SteamLibrary\steamapps\common\Gunfire Reborn</GameDir>
+    <BepInExDir>$(GameDir)\BepInEx</BepInExDir>
+    <GameLibDir>$(BepInExDir)\interop</GameLibDir>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <RestoreAdditionalProjectSources>
+      https://api.nuget.org/v3/index.json;
+      https://nuget.bepinex.dev/v3/index.json;
+      https://nuget.samboy.dev/v3/index.json
+    </RestoreAdditionalProjectSources>
+  </PropertyGroup>
+
+</Project>

@@ -4,23 +4,24 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using EmberConfig.PrefabDataGen;
 using YamlDotNet.RepresentationModel;
 
 internal static class UnityPrefabLoader
 {
     internal static PrefabDocument Load(string path)
     {
-        Console.WriteLine($"  [Loader] reading {path} ...");
+        Log.Info($"  [Loader] reading {path} ...");
         using var reader = new StreamReader(path);
         var stream = new YamlStream();
-        Console.WriteLine($"  [Loader] parsing YAML ...");
+        Log.Info($"  [Loader] parsing YAML ...");
         stream.Load(reader);
-        Console.WriteLine($"  [Loader] parsed {stream.Documents.Count} YAML documents");
+        Log.Info($"  [Loader] parsed {stream.Documents.Count} YAML documents");
 
         var components = new Dictionary<long, ComponentNode>();
         var gameObjects = new Dictionary<long, GameObjectNode>();
 
-        Console.WriteLine($"  [Loader] building component / GameObject index ...");
+        Log.Info($"  [Loader] building component / GameObject index ...");
 
         foreach (var document in stream.Documents)
         {
@@ -32,8 +33,20 @@ internal static class UnityPrefabLoader
             if (string.IsNullOrEmpty(anchor) || !long.TryParse(anchor, out var fileID))
                 continue;
 
-            var typeEntry = mapping.Children.FirstOrDefault();
-            var typeName = typeEntry.Key.ToString();
+            if (mapping.Children.Count == 0)
+            {
+                Log.Error($"Skipping empty YAML mapping in {path} with anchor '{anchor}'");
+                continue;
+            }
+
+            var typeEntry = mapping.Children.First();
+            if (typeEntry.Key is not YamlScalarNode keyScalar)
+            {
+                Log.Error($"Skipping YAML mapping with non-scalar first key in {path} (anchor '{anchor}')");
+                continue;
+            }
+
+            var typeName = keyScalar.Value ?? string.Empty;
             var innerProperties = typeEntry.Value as YamlMappingNode ?? mapping;
             var unityType = ParseUnityType(root.Tag.Value);
             var component = new ComponentNode(fileID, unityType, typeName, innerProperties);
@@ -94,7 +107,7 @@ internal static class UnityPrefabLoader
         }
 
         // Root order by RectTransform children order.
-        Console.WriteLine($"  [Loader] wiring hierarchy ...");
+        Log.Info($"  [Loader] wiring hierarchy ...");
 
         foreach (var component in components.Values.Where(c => c.UnityType == 224))
         {
@@ -112,7 +125,7 @@ internal static class UnityPrefabLoader
             go.Children.AddRange(orderedChildren);
         }
 
-        Console.WriteLine($"  [Loader] done: {gameObjects.Count} GameObjects, {components.Count} components");
+        Log.Info($"  [Loader] done: {gameObjects.Count} GameObjects, {components.Count} components");
         return new PrefabDocument(components, gameObjects);
     }
 

@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>EmberConfig.ExampleMod</AssemblyName>
     <RootNamespace>EmberConfig.ExampleMod</RootNamespace>
     <Product>EmberConfig Example</Product>
@@ -10,22 +9,9 @@
     <BepInExPluginName>EmberConfig Example</BepInExPluginName>
     <BepInExPluginVersion>1.0.0</BepInExPluginVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>latest</LangVersion>
-    <Nullable>enable</Nullable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1591;CS1573</NoWarn>
     <DeployToPlugins>false</DeployToPlugins>
-    <RestoreAdditionalProjectSources>
-      https://api.nuget.org/v3/index.json;
-      https://nuget.bepinex.dev/v3/index.json;
-      https://nuget.samboy.dev/v3/index.json
-    </RestoreAdditionalProjectSources>
-  </PropertyGroup>
-
-  <PropertyGroup Label="GamePaths">
-    <GameDir>E:\SteamLibrary\steamapps\common\Gunfire Reborn</GameDir>
-    <BepInExDir>$(GameDir)\BepInEx</BepInExDir>
-    <GameLibDir>$(BepInExDir)\interop</GameLibDir>
   </PropertyGroup>
 
   <ItemGroup>
@@ -34,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\EmberConfig.csproj">
+    <ProjectReference Include="..\EmberConfig\EmberConfig.csproj">
       <Private>false</Private>
     </ProjectReference>
   </ItemGroup>

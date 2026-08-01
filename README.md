@@ -19,9 +19,8 @@ A standalone BepInEx 6 plugin for Gunfire Reborn that exposes a generic `Setting
 
 ## Installation
 
-Build with the project `dotnet publish` (or download the dll from the releases) and copy `EmberConfig.dll` to `BepInEx/plugins/`.
-To deploy automatically after building, set `GameDir` in the `.csproj` to your game installation.
-To build without deployment add `-p:DeployToPlugins=false`.
+Build the project with `dotnet build EmberConfig/EmberConfig.csproj -p:DeployToPlugins=false` (or download the dll from the releases) and copy `EmberConfig.dll` to `BepInEx/plugins/`.
+Game paths are read from the `GUNFIRE_REBORN_DIR` environment variable; they are centralized in `Mods/EmberConfig/Directory.Build.props` with a fallback to `E:\SteamLibrary\steamapps\common\Gunfire Reborn`. To override per build, pass `-p:GameDir=<game root>`.
 
 ## Dependency (Soft Dependency)
 

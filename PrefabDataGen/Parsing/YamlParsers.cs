@@ -72,15 +72,4 @@ internal static class YamlParsers
         return null;
     }
 
-    internal static float? ParseFloat(YamlScalarNode? node) =>
-        node is not null && float.TryParse(node.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var value)
-            ? value
-            : null;
-
-    internal static int? ParseInt(YamlScalarNode? node) =>
-        node is not null && int.TryParse(node.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var value)
-            ? value
-            : null;
-
-    internal static string? ParseString(YamlScalarNode? node) => node?.Value;
 }
