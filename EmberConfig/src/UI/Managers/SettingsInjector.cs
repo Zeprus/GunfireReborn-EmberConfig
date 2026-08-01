@@ -220,10 +220,10 @@ internal sealed class SettingsInjector
 
         var redColorBlock = new ColorBlock
         {
-            normalColor = new Color(0.55f, 0.12f, 0.12f, 1f),
-            highlightedColor = new Color(0.85f, 0.25f, 0.25f, 1f),
-            pressedColor = new Color(0.4f, 0.08f, 0.08f, 1f),
-            disabledColor = new Color(0.35f, 0.08f, 0.08f, 0.5f),
+            normalColor = new Color(0.25f, 0.05f, 0.05f, 0.42f),
+            highlightedColor = new Color(0.40f, 0.12f, 0.12f, 0.50f),
+            pressedColor = new Color(0.20f, 0.04f, 0.04f, 0.42f),
+            disabledColor = new Color(0.15f, 0.03f, 0.03f, 0.30f),
             colorMultiplier = 1f,
             fadeDuration = 0.1f
         };
