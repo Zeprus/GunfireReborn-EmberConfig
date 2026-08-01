@@ -41,6 +41,25 @@ public sealed class SettingsRegistry
         EntryRegistered?.Invoke();
     }
 
+    public bool Unregister(ISettingEntry entry)
+    {
+        if (entry is null)
+            throw new ArgumentNullException(nameof(entry));
+
+        if (!entries.Remove(entry))
+            return false;
+
+        var tab = Normalize(entry.Location.Tab);
+        if (byTab.TryGetValue(tab, out var tabEntries))
+        {
+            tabEntries.Remove(entry);
+            if (tabEntries.Count == 0)
+                byTab.Remove(tab);
+        }
+
+        return true;
+    }
+
     public IEnumerable<ISettingEntry> GetByTab(string tab)
     {
         return byTab.TryGetValue(Normalize(tab), out var tabEntries) ? tabEntries : Enumerable.Empty<ISettingEntry>();

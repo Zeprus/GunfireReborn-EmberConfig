@@ -36,6 +36,9 @@ public class SettingsMenuManager : MonoBehaviour, UI.IKeybindRowServices
     private SettingsInjector? injector;
     private InputDispatcher? inputDispatcher;
 
+    private string? preRebuildActiveTab;
+    private float preRebuildScrollPosition = 1f;
+
     private void Awake()
     {
         try
@@ -97,8 +100,13 @@ public class SettingsMenuManager : MonoBehaviour, UI.IKeybindRowServices
 
         TrackPanel();
         InitializeUIIfNeeded();
+        CapturePreRebuildScroll();
         RebuildIfRequested();
+        var wasRebuilding = injector.IsRebuilding;
         ContinueBuildIfNeeded();
+        var isRebuilding = injector.IsRebuilding;
+        if (wasRebuilding && !isRebuilding)
+            RestoreScrollAfterRebuild();
         UpdateRowsAndState();
         ValidateTabState();
         PollInputAndToast();
@@ -210,6 +218,20 @@ public class SettingsMenuManager : MonoBehaviour, UI.IKeybindRowServices
         rebuildCoordinator.RequestRebuild(panelTracker?.IsOpen ?? false, uiFinder?.IsReady ?? false);
     }
 
+    public void RequestVisibilityRefresh(string modName, string tabName)
+    {
+        if (string.IsNullOrWhiteSpace(modName))
+            return;
+
+        if (injector?.IsRebuilding ?? false)
+        {
+            RequestRebuild();
+            return;
+        }
+
+        injector?.RefreshVisibility(modName, tabName);
+    }
+
     public void OnKeybindPanelRefreshed(int id)
     {
         RequestRebuild();
@@ -223,6 +245,8 @@ public class SettingsMenuManager : MonoBehaviour, UI.IKeybindRowServices
     private void OnPanelClosed()
     {
         SettingsPanelState.IsBlockingClose = false;
+        preRebuildActiveTab = null;
+        preRebuildScrollPosition = 1f;
         injector?.Clear();
         tabManager?.OnPanelClosed();
         uiFinder?.Reset();
@@ -232,6 +256,28 @@ public class SettingsMenuManager : MonoBehaviour, UI.IKeybindRowServices
     private void OnEntryRegistered()
     {
         RequestRebuild();
+    }
+
+    private void CapturePreRebuildScroll()
+    {
+        if (injector?.IsRebuilding != false)
+            return;
+
+        preRebuildActiveTab = tabManager?.GetActiveTabName();
+        preRebuildScrollPosition = uiFinder?.ScrollRect?.verticalNormalizedPosition ?? 1f;
+    }
+
+    private void RestoreScrollAfterRebuild()
+    {
+        if (uiFinder?.ScrollRect is null)
+            return;
+
+        var currentActive = tabManager?.GetActiveTabName();
+        if (currentActive != preRebuildActiveTab)
+            return;
+
+        Canvas.ForceUpdateCanvases();
+        uiFinder.ScrollRect.verticalNormalizedPosition = preRebuildScrollPosition;
     }
 
     private static void RegisterIl2CppTypes()

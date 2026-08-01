@@ -128,10 +128,34 @@ public class VisibilityStoreTests
         Assert.Equal(2, visibilityRows.Count);
     }
 
+    [Fact]
+    public void ResetAllVisibility_RemovesAndRecreatesSwitchesWithDefaultValue()
+    {
+        var config = NewConfig();
+        var store = new VisibilityStore(config);
+        var entry = CreateConsumer("MyMod", "Game Settings", "Group");
+
+        store.EnsureVisibilitySwitch(entry);
+        var first = store.GetOrCreate("MyMod", "Game Settings");
+        first.Value = false;
+
+        store.ResetAllVisibility();
+
+        var visibilityRows = SettingsRegistry.Current.Entries
+            .OfType<SettingEntry<bool>>()
+            .Where(e => e.ModName == VisibilityStore.SentinelModName)
+            .ToList();
+
+        Assert.Single(visibilityRows);
+        Assert.True(visibilityRows[0].Config.Value);
+    }
+
     private static ISettingEntry CreateConsumer(string modName, string tab, string? group)
     {
         var config = NewConfig();
         var setting = config.Bind("test", "key", "value");
-        return new SettingEntry<string>(Guid.NewGuid().ToString("N"), setting, "Label", modName, new SettingLocation(tab, group));
+        var entry = new SettingEntry<string>(Guid.NewGuid().ToString("N"), setting, "Label", modName, new SettingLocation(tab, group));
+        SettingsRegistry.Current.Register(entry);
+        return entry;
     }
 }

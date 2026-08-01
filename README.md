@@ -38,6 +38,8 @@ using UnityEngine;
 
 [BepInPlugin("your.mod.guid", "Your Mod", "1.0.0")]
 [BepInDependency("zeprus.gunfire.EmberConfig", BepInDependency.DependencyFlags.SoftDependency)]
+// The BepInEx.PluginInfoProps package (or equivalent source) generates MyPluginInfo
+// with the plugin name. Pass MyPluginInfo.PLUGIN_NAME as ModName.
 public class YourModPlugin : BasePlugin
 {
     public override void Load()
@@ -71,7 +73,7 @@ public static class EmberConfigCompatibility
             Label: "Master Volume",
             Tab: SettingsTab.Audio.ToNativeName(),
             Group: "My Mod",
-            ModName: "My Mod");
+            ModName: MyPluginInfo.PLUGIN_NAME);
 
         SettingsMenu.Register(config, options);
     }
@@ -114,7 +116,7 @@ var options = new SettingOptions<float>(
     Label: "Master Volume",
     Tab: SettingsTab.Audio.ToNativeName(),
     Group: "My Mod",
-    ModName: "My Mod",
+    ModName: MyPluginInfo.PLUGIN_NAME,
     AcceptableValues: new AcceptableValueRange<float>(0f, 1f),
     OnValueChanged: v => AudioListener.volume = v);
 
@@ -135,7 +137,7 @@ var dropdownOptions = new SettingOptions<string>(
     Label: "Difficulty",
     Tab: SettingsTab.GameSettings.ToNativeName(),
     Group: "My Mod",
-    ModName: "My Mod",
+    ModName: MyPluginInfo.PLUGIN_NAME,
     AcceptableValues: new AcceptableValueList<string>("Easy", "Normal", "Hard"));
 
 var config = Config.Bind(dropdownOptions.Section, dropdownOptions.Key, dropdownOptions.DefaultValue,
@@ -155,7 +157,7 @@ var keybindOptions = new KeybindOptions(
     Label: "Toggle Overlay",
     Tab: SettingsTab.MouseKeyboard.ToNativeName(),
     Group: "My Mod",
-    ModName: "My Mod",
+    ModName: MyPluginInfo.PLUGIN_NAME,
     OnPressed: () => overlay.SetActive(!overlay.activeSelf));
 
 SettingsMenu.RegisterKeybind(Config, keybindOptions);
@@ -172,7 +174,7 @@ var customOptions = new SettingOptions<bool>(
     Label: "Show FPS",
     Tab: "My Mod",
     Group: "My Mod",
-    ModName: "My Mod");
+    ModName: MyPluginInfo.PLUGIN_NAME);
 
 SettingsMenu.Register(Config, customOptions);
 ```
@@ -194,7 +196,7 @@ var switchOptions = new SettingOptions<bool>(
     Label: "Show Hints",
     Tab: SettingsTab.GameSettings.ToNativeName(),
     Group: "My Mod",
-    ModName: "My Mod",
+    ModName: MyPluginInfo.PLUGIN_NAME,
     ControlStyle: SettingControlStyle.Switch,
     SwitchLabels: new SwitchLabels("Show", "Hide"));
 

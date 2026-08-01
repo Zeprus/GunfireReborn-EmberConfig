@@ -2,6 +2,7 @@ namespace EmberConfig.Core;
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using BepInEx.Configuration;
 using EmberConfig.Public;
@@ -13,7 +14,7 @@ using EmberConfig.Public;
 public sealed class VisibilityStore
 {
     public const string VisibilityTab = "EmberConfig";
-    public const string VisibilityGroup = "Mod Visibility";
+    public const string VisibilityGroup = "Settings Visibility";
     public const string VisibilitySection = "Visibility";
     public const string SentinelModName = "__EmberConfigVisibility";
 
@@ -75,7 +76,7 @@ public sealed class VisibilityStore
 
     /// <summary>
     /// Ensures a visibility switch exists for the consumer entry's (ModName, Tab).
-    /// The switch is registered in the EmberConfig tab under the "Mod Visibility" group,
+    /// The switch is registered in the EmberConfig tab under the "Settings Visibility" group,
     /// with the mod name as the sub-group.
     /// </summary>
     public void EnsureVisibilitySwitch(ISettingEntry consumerEntry)
@@ -86,10 +87,7 @@ public sealed class VisibilityStore
         var modName = consumerEntry.ModName;
         var tabName = consumerEntry.Location.Tab;
 
-        if (modName == SentinelModName)
-            return;
-
-        if (tabName == VisibilityTab)
+        if (IsAlwaysVisible(modName, tabName))
             return;
 
         var key = GetKey(modName, tabName);
@@ -103,11 +101,43 @@ public sealed class VisibilityStore
             tabName,
             SentinelModName,
             new SettingLocation(VisibilityTab, VisibilityGroup, modName),
-            _ => SettingsMenuManager.Current?.RequestRebuild(),
+            _ => SettingsMenuManager.Current?.RequestVisibilityRefresh(modName, tabName),
             SettingControlStyle.Switch,
             null);
 
         SettingsRegistry.Current.Register(entry);
+    }
+
+    /// <summary>
+    /// Resets all visibility toggles by deleting them from the config and re-creating
+    /// switches for every registered consumer. This restores default (visible) state
+    /// for all current and previously registered mods.
+    /// </summary>
+    public void ResetAllVisibility()
+    {
+        if (!SettingsRegistry.IsInitialized)
+            return;
+
+        // Remove visibility config entries from the BepInEx config file, including
+        // switches for mods that are no longer loaded.
+        foreach (var key in configFile
+            .Where(kvp => string.Equals(kvp.Key.Section, VisibilitySection, StringComparison.OrdinalIgnoreCase))
+            .Select(kvp => kvp.Key)
+            .ToList())
+            configFile.Remove(key);
+
+        // Unregister the old visibility rows so they do not reference removed config entries.
+        foreach (var row in SettingsRegistry.Current.Entries.OfType<ISettingEntry>().Where(e => e.ModName == SentinelModName).ToList())
+            SettingsRegistry.Current.Unregister(row);
+
+        entries.Clear();
+        registeredSwitches.Clear();
+
+        configFile.Save();
+
+        // Re-create visibility switches for all current consumer entries.
+        foreach (var consumer in SettingsRegistry.Current.Entries.Where(e => e.ModName != SentinelModName && !IsAlwaysVisible(e.ModName, e.Location.Tab)).ToList())
+            EnsureVisibilitySwitch(consumer);
     }
 
     private static bool IsAlwaysVisible(string modName, string tabName)

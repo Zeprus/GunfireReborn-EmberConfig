@@ -8,6 +8,8 @@ internal interface ISettingRow
     Transform Transform { get; }
     GameObject GameObject { get; }
 
+    ISettingEntry? Entry { get; }
+
     void Bind(ISettingEntry entry);
     void Refresh();
     void Unbind();

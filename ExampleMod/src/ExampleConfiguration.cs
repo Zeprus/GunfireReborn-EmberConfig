@@ -104,7 +104,7 @@ public static class ExampleConfiguration
             Label: "Show FPS Marker",
             Tab: SettingsTab.GameSettings.ToNativeName(),
             Group: "Visual",
-            ModName: "Example Mod",
+            ModName: MyPluginInfo.PLUGIN_NAME,
             OnValueChanged: value => behaviour.SetMarkerVisible(value));
 
         SettingsMenu.Register(config, options);
@@ -126,7 +126,7 @@ public static class ExampleConfiguration
             Label: "Master Volume",
             Tab: SettingsTab.Audio.ToNativeName(),
             Group: "Audio",
-            ModName: "Example Mod",
+            ModName: MyPluginInfo.PLUGIN_NAME,
             AcceptableValues: new AcceptableValueRange<float>(0f, 1f),
             OnValueChanged: value => AudioListener.volume = value);
 
@@ -147,7 +147,7 @@ public static class ExampleConfiguration
             Label: "Field of View",
             Tab: SettingsTab.Video.ToNativeName(),
             Group: "Video",
-            ModName: "Example Mod",
+            ModName: MyPluginInfo.PLUGIN_NAME,
             AcceptableValues: new AcceptableValueRange<int>(60, 120),
             OnValueChanged: value => Plugin.Logger?.LogInfo($"Field of view changed to {value}."));
 
@@ -169,7 +169,7 @@ public static class ExampleConfiguration
             Label: "Difficulty",
             Tab: SettingsTab.GameSettings.ToNativeName(),
             Group: "Gameplay",
-            ModName: "Example Mod",
+            ModName: MyPluginInfo.PLUGIN_NAME,
             OnValueChanged: value => Plugin.Logger?.LogInfo($"Difficulty changed to {value}."));
 
         SettingsMenu.Register(config, options);
@@ -189,7 +189,7 @@ public static class ExampleConfiguration
             Label: "Toggle Overlay",
             Tab: SettingsTab.MouseKeyboard.ToNativeName(),
             Group: "Input",
-            ModName: "Example Mod",
+            ModName: MyPluginInfo.PLUGIN_NAME,
             OnPressed: () => behaviour.ToggleOverlay(),
             OnReleased: () => Plugin.Logger?.LogInfo("Toggle overlay key released."));
 
@@ -217,7 +217,7 @@ public static class ExampleConfiguration
             Label: "Max FPS",
             Tab: SettingsTab.GameSettings.ToNativeName(),
             Group: "Gameplay",
-            ModName: "Example Mod",
+            ModName: MyPluginInfo.PLUGIN_NAME,
             OnValueChanged: value => Application.targetFrameRate = value <= 0 ? -1 : value);
 
         SettingsMenu.Register(configEntry, options);
@@ -243,7 +243,7 @@ public static class ExampleConfiguration
             Label: "Mouse Sensitivity",
             Tab: SettingsTab.MouseKeyboard.ToNativeName(),
             Group: "Input",
-            ModName: "Example Mod",
+            ModName: MyPluginInfo.PLUGIN_NAME,
             OnValueChanged: value => Plugin.Logger?.LogInfo($"Mouse sensitivity set to {value}."));
 
         SettingsMenu.Register(configEntry, options);
@@ -269,7 +269,7 @@ public static class ExampleConfiguration
             Label: "Nickname",
             Tab: SettingsTab.GameSettings.ToNativeName(),
             Group: "Profile",
-            ModName: "Example Mod",
+            ModName: MyPluginInfo.PLUGIN_NAME,
             OnValueChanged: value => Plugin.Logger?.LogInfo($"Nickname changed to '{value}'."));
 
         SettingsMenu.Register(configEntry, options);
@@ -297,7 +297,7 @@ public static class ExampleConfiguration
             Label: "Language",
             Tab: SettingsTab.GameSettings.ToNativeName(),
             Group: "Gameplay",
-            ModName: "Example Mod",
+            ModName: MyPluginInfo.PLUGIN_NAME,
             AcceptableValues: acceptableValues,
             OnValueChanged: value => Plugin.Logger?.LogInfo($"Language changed to {value}."));
 
@@ -325,7 +325,7 @@ public static class ExampleConfiguration
             Label: "Max Retries",
             Tab: SettingsTab.Video.ToNativeName(),
             Group: "Video",
-            ModName: "Example Mod",
+            ModName: MyPluginInfo.PLUGIN_NAME,
             AcceptableValues: acceptableValues,
             OnValueChanged: value => Plugin.Logger?.LogInfo($"Max retries changed to {value}."));
 
@@ -347,7 +347,7 @@ public static class ExampleConfiguration
             Label: "Enable Overlay",
             Tab: "Example Mod: General",
             Group: "General",
-            ModName: "Example Mod",
+            ModName: MyPluginInfo.PLUGIN_NAME,
             OnValueChanged: value => behaviour.SetOverlayVisible(value));
         SettingsMenu.Register(config, options);
     }
@@ -367,7 +367,7 @@ public static class ExampleConfiguration
             Label: "Music Volume",
             Tab: "Example Mod: General",
             Group: "General",
-            ModName: "Example Mod",
+            ModName: MyPluginInfo.PLUGIN_NAME,
             AcceptableValues: new AcceptableValueRange<float>(0f, 1f),
             OnValueChanged: value => Plugin.Logger?.LogInfo($"Music volume changed to {value}."));
 
@@ -389,7 +389,7 @@ public static class ExampleConfiguration
             Label: "Max Particles",
             Tab: "Example Mod: Visuals",
             Group: "Visuals",
-            ModName: "Example Mod",
+            ModName: MyPluginInfo.PLUGIN_NAME,
             SubGroup: "Rendering",
             AcceptableValues: new AcceptableValueRange<int>(0, 10000),
             OnValueChanged: value => Plugin.Logger?.LogInfo($"Max particles changed to {value}."));
@@ -411,7 +411,7 @@ public static class ExampleConfiguration
             Label: "Quality",
             Tab: "Example Mod: Visuals",
             Group: "Visuals",
-            ModName: "Example Mod",
+            ModName: MyPluginInfo.PLUGIN_NAME,
             OnValueChanged: value => Plugin.Logger?.LogInfo($"Quality changed to {value}."));
 
         SettingsMenu.Register(config, options);
@@ -433,7 +433,7 @@ public static class ExampleConfiguration
             Label: "Render Scale",
             Tab: "Example Mod: Rendering",
             Group: "Rendering",
-            ModName: "Example Mod",
+            ModName: MyPluginInfo.PLUGIN_NAME,
             AcceptableValues: acceptableValues,
             OnValueChanged: value => Plugin.Logger?.LogInfo($"Render scale changed to {value}."));
 
@@ -455,7 +455,7 @@ public static class ExampleConfiguration
             Label: "Difficulty Carousel",
             Tab: "Example Mod: Gameplay",
             Group: "Gameplay",
-            ModName: "Example Mod",
+            ModName: MyPluginInfo.PLUGIN_NAME,
             OnValueChanged: value => Plugin.Logger?.LogInfo($"Difficulty carousel changed to {value}."),
             ControlStyle: SettingControlStyle.Carousel);
 
@@ -483,7 +483,7 @@ public static class ExampleConfiguration
             Label: "Show Hints",
             Tab: "Example Mod: Gameplay",
             Group: "Gameplay",
-            ModName: "Example Mod",
+            ModName: MyPluginInfo.PLUGIN_NAME,
             SubGroup: "UI",
             OnValueChanged: value => behaviour.SetMarkerVisible(value),
             ControlStyle: SettingControlStyle.Switch,
@@ -513,7 +513,7 @@ public static class ExampleConfiguration
             Label: "Gamma",
             Tab: "Example Mod: Rendering",
             Group: "Rendering",
-            ModName: "Example Mod",
+            ModName: MyPluginInfo.PLUGIN_NAME,
             OnValueChanged: value => Plugin.Logger?.LogInfo($"Gamma changed to {value}."));
 
         SettingsMenu.Register(configEntry, options);
@@ -541,7 +541,7 @@ public static class ExampleConfiguration
             Label: "Region",
             Tab: "Example Mod: Network & Input",
             Group: "Network",
-            ModName: "Example Mod",
+            ModName: MyPluginInfo.PLUGIN_NAME,
             AcceptableValues: acceptableValues,
             OnValueChanged: value => Plugin.Logger?.LogInfo($"Region changed to {value}."));
 
@@ -570,7 +570,7 @@ public static class ExampleConfiguration
             Label: "FPS Cap",
             Tab: "Example Mod: Gameplay",
             Group: "Gameplay",
-            ModName: "Example Mod",
+            ModName: MyPluginInfo.PLUGIN_NAME,
             AcceptableValues: acceptableValues,
             OnValueChanged: value => Application.targetFrameRate = value == 0 ? -1 : value);
 
@@ -596,7 +596,7 @@ public static class ExampleConfiguration
             Label: "Sprint / Walk",
             Tab: "Example Mod: Network & Input",
             Group: "Input",
-            ModName: "Example Mod",
+            ModName: MyPluginInfo.PLUGIN_NAME,
             DefaultSecondary: KeyCode.F,
             OnPressed: () => Plugin.Logger?.LogInfo("Sprint key pressed."),
             OnReleased: () => Plugin.Logger?.LogInfo("Sprint key released."));
