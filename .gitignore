@@ -485,3 +485,7 @@ $RECYCLE.BIN/
 
 #PrefabDataGen generated code
 src/Generated
+
+# Keep the branding icon for README
+!EmberConfig/branding/icon/
+!EmberConfig/branding/icon/**
