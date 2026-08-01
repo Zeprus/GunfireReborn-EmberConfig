@@ -1,5 +1,7 @@
 # EmberConfig
 
+<img src="EmberConfig/branding/icon/emberconfig_icon.png" alt="EmberConfig icon" width="100" />
+
 A standalone BepInEx 6 plugin for Gunfire Reborn that exposes a generic `SettingsMenu` API. Mods can register settings and keybinds that appear inside the native in-game settings panel with vanilla visual and audio parity.
 
 ## Features

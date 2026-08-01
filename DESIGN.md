@@ -407,11 +407,10 @@ This is edge-triggered and single-frame, so keybinds do not fire while held and 
 ## Project Layout
 
 ```
-Mods/EmberConfig/
+EmberConfig/
 ├── Directory.Build.props
 ├── README.md
 ├── DESIGN.md
-├── AGENTS.md
 ├── EmberConfig/
 │   ├── EmberConfig.csproj
 │   ├── EmberConfig.Tests/
@@ -430,7 +429,6 @@ Mods/EmberConfig/
 │   ├── src/
 │   │   ├── Plugin.cs
 │   │   ├── SettingsMenuManager.cs
-│   │   ├── UIResources.cs
 │   │   ├── Public/
 │   │   │   ├── SettingsMenu.cs
 │   │   │   ├── SettingOptions.cs
@@ -455,8 +453,8 @@ Mods/EmberConfig/
 │   │   │       ├── SettingsPanelState.cs
 │   │   │       ├── SettingsPanelStateListener.cs
 │   │   │       └── TransformFinder.cs
-│   │   ├── UIResources.cs
 │   │   ├── UI/
+│   │   │   ├── UIResources.cs
 │   │   │   ├── StyleFactoryController.cs
 │   │   │   ├── Resolvers/
 │   │   │   │   ├── RowTypeResolver.cs
@@ -574,10 +572,6 @@ Mods/EmberConfig/
 │   ├── Parsing/
 │   ├── Resolution/
 │   └── README.md
-└── Branding/
-    └── icon/
-        ├── emberconfig_icon.png
-        └── emberconfig_icon.psd
 ```
 
 ## Technology Stack
