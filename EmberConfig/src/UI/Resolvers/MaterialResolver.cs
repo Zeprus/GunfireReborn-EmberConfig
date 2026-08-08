@@ -1,6 +1,5 @@
 namespace EmberConfig.UI;
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -16,6 +15,12 @@ internal static class MaterialResolver
             return cached;
 
         loadedMaterials ??= UnityEngine.Resources.FindObjectsOfTypeAll<Material>();
+        if (loadedMaterials is null || loadedMaterials.Length == 0)
+        {
+            // Don't cache an empty scan; materials may still be loading.
+            loadedMaterials = null;
+            return null;
+        }
 
         if (!string.IsNullOrEmpty(name))
         {

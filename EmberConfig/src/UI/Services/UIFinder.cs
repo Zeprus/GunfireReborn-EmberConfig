@@ -42,7 +42,11 @@ public sealed class UIFinder
         }
 
         Style = StyleFactoryController.Create(panelRoot);
-        IsReady = Style is not null && viewport is not null && tabSwitch is not null;
+        IsReady = Style is not null
+            && viewport is not null
+            && tabSwitch is not null
+            && Style.Row.Title.Font is not null
+            && (Style.Tab is null || (Style.Tab?.Selected.Font is not null && Style.Tab?.Unselected.Font is not null));
     }
 
     public void Reset()

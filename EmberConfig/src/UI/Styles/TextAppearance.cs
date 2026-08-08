@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine;
 
 internal readonly record struct TextAppearance(
-    TMP_FontAsset Font,
+    TMP_FontAsset? Font,
     Material? FontMaterial,
     float FontSize,
     Color Color,

@@ -18,6 +18,12 @@ internal static class SpriteResolver
             return cached;
 
         loadedSprites ??= UnityEngine.Resources.FindObjectsOfTypeAll<Sprite>();
+        if (loadedSprites is null || loadedSprites.Length == 0)
+        {
+            // Don't cache an empty scan; sprites may still be loading.
+            loadedSprites = null;
+            return null;
+        }
 
         var sprite = loadedSprites.FirstOrDefault(s => s.name == name);
         Cache[name] = sprite;

@@ -183,7 +183,7 @@ public class SettingsMenuManager : MonoBehaviour, UI.IKeybindRowServices
         {
             injector!.UpdateRows();
             SettingsPanelState.IsCapturing = injector.IsCapturing;
-            tabManager!.Update(Time.deltaTime);
+            tabManager!.Update(Time.unscaledDeltaTime);
         });
     }
 

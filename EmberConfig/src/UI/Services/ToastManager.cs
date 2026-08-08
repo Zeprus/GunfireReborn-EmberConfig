@@ -47,7 +47,7 @@ internal sealed class ToastManager
         if (activeToast is null || activeToast.Equals(null))
             return;
 
-        toastTimer -= Time.deltaTime;
+        toastTimer -= Time.unscaledDeltaTime;
         if (toastTimer <= 0f)
         {
             activeToast.SetActive(false);
